@@ -98,6 +98,41 @@
   .footlinks button{background:none;border:none;color:var(--green-dark);font-weight:700;font-size:.95rem;cursor:pointer;font-family:inherit;text-decoration:underline;}
   @media print{ header.top,.noprint{display:none !important;} body{background:#fff;} .card{box-shadow:none;} }
 </style>
+<script>
+/* ---------- seasonal accents ----------
+   The soft-green base stays all year; in season, a small override
+   dresses the accent colors only (buttons, top bar, highlights).
+   Person colors, cards and text colors never change. To add a
+   season later, add one row to SEASONS. */
+function thanksgivingDay(year){
+  var nov1 = new Date(year, 10, 1);
+  var firstThursday = 1 + ((4 - nov1.getDay() + 7) % 7);
+  return new Date(year, 10, firstThursday + 21);
+}
+var SEASONS = [
+  { name: "thanksgiving",
+    from: function(y){ return new Date(y, 10, 1); },
+    to: function(y){ return thanksgivingDay(y); },
+    css: ":root{--green:#a34d21;--green-dark:#6e3b1e;--green-soft:#f8ecd2;}" +
+         ".btn:active{background:#9e2b25;}" }
+];
+(function applySeason(){
+  try {
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    for (var i = 0; i < SEASONS.length; i++){
+      var s = SEASONS[i], y = now.getFullYear();
+      if (today >= s.from(y) && today <= s.to(y)){
+        var el = document.createElement("style");
+        el.id = "seasonStyle";
+        el.textContent = s.css;
+        document.head.appendChild(el);
+        return;
+      }
+    }
+  } catch (e){ /* accents are a garnish — never break the page over them */ }
+})();
+</script>
 </head>
 <body>
 
@@ -428,6 +463,15 @@
           <p style="margin:0;"><b>Reminders are on</b><br><span class="small muted">Alerts never name the person or the gift. Details stay behind your sign-in.</span></p>
           <input id="ntOn" type="checkbox" style="width:30px;height:30px;flex:none;">
         </div>
+        <h3>Which dates?</h3>
+        <div class="switchrow">
+          <p style="margin:0;"><b>Remind me about all of them</b><br><span class="small muted">Every birthday and occasion on your list — no turning reminders on one date at a time.</span></p>
+          <input id="ntAll" type="checkbox" style="width:30px;height:30px;flex:none;">
+        </div>
+        <div class="switchrow" style="margin-top:10px;">
+          <p style="margin:0;"><b>Also nudge me 3 days before</b><br><span class="small muted">One extra nudge when a date is 3 days away, even if it was already reminded once.</span></p>
+          <input id="nt3" type="checkbox" style="width:30px;height:30px;flex:none;">
+        </div>
         <h3>How should we remind you?</h3>
         <div class="seg" id="ntBySeg">
           <button type="button" data-by="browser">Browser alert<span class="small" style="display:block;font-weight:400;">A pop-up in this browser</span></button>
@@ -667,7 +711,8 @@ var HOLIDAYS = [
   {label:"Christmas", month:12, day:25}
 ];
 function defaultState(){
-  return {pin:"1234", budget:0, reminderDays:30, notificationsOn:true, notifyBy:"browser",
+  return {pin:"1234", budget:0, reminderDays:30, remindAll:false, remind3:false,
+          notificationsOn:true, notifyBy:"browser",
           notifyEmail:"", eventLimits:{}, seenReminders:[], people:[], gifts:[]};
 }
 
@@ -738,7 +783,8 @@ function upcomingList(st){
     return p.occasions.map(function(o){
       var d = nextOccurrence(o.month, o.day);
       return {key: p.id + "-" + o.id, personId: p.id, personName: p.name, personColor: p.color,
-              label: o.label, kind: o.kind, date: d, daysAway: daysAwayFrom(d)};
+              label: o.label, kind: o.kind, date: d, daysAway: daysAwayFrom(d),
+              remind: o.remind !== false};
     });
   }).sort(function(a, b){ return a.daysAway - b.daysAway; });
 }
@@ -765,6 +811,7 @@ function normPerson(e){
       var base = {id: Zs(o.id), kind: o.kind != null ? o.kind : "custom", label: Zs(o.label),
                   month: Number(o.month) || 1, day: Number(o.day) || 1};
       if (typeof o.title === "string" && o.title) base.title = o.title;
+      if (typeof o.remind === "boolean") base.remind = o.remind;
       return base;
     }),
     sizes: Zs(t.sizes), favorites: Zs(t.favorites), hobbies: Zs(t.hobbies), notes: Zs(t.notes),
@@ -791,6 +838,8 @@ function normState(e){
     pin: Zs(t.pin) || d.pin,
     budget: Number(t.budget) || 0,
     reminderDays: Number(t.reminderDays) || d.reminderDays,
+    remindAll: t.remindAll === true,
+    remind3: t.remind3 === true,
     notificationsOn: t.notificationsOn !== false,
     notifyBy: t.notifyBy === "email" ? "email" : "browser",
     notifyEmail: Zs(t.notifyEmail),
@@ -1014,10 +1063,17 @@ function buildSeg(segEl, attr, items, current){
 }
 
 /* ---------- bell (reminders waiting in the window, clears once seen) ---------- */
+/* A date's own reminder counts unless it was turned off on that date;
+   "remind about all of them" (remindAll) covers every date regardless.
+   The 3-day nudge keeps its own seen-key (key + ":3"), so seeing the
+   regular reminder never swallows the nudge, and the other way round. */
+function remindOnFor(u){ return state.remindAll === true || u.remind !== false; }
 function pendingReminders(){
   if (!state.notificationsOn) return [];
   return upcomingList(state).filter(function(u){
-    return u.daysAway <= state.reminderDays && state.seenReminders.indexOf(u.key) < 0;
+    if (!remindOnFor(u)) return false;
+    if (u.daysAway <= state.reminderDays && state.seenReminders.indexOf(u.key) < 0) return true;
+    return state.remind3 === true && u.daysAway <= 3 && state.seenReminders.indexOf(u.key + ":3") < 0;
   });
 }
 function updateBell(){
@@ -1025,8 +1081,12 @@ function updateBell(){
   if (dot) dot.classList.toggle("hidden", pendingReminders().length === 0);
 }
 function markRemindersSeen(){
-  var keys = upcomingList(state).filter(function(u){ return u.daysAway <= state.reminderDays; })
-    .map(function(u){ return u.key; });
+  var keys = [];
+  upcomingList(state).forEach(function(u){
+    if (!remindOnFor(u)) return;
+    if (u.daysAway <= state.reminderDays) keys.push(u.key);
+    if (state.remind3 === true && u.daysAway <= 3) keys.push(u.key + ":3");
+  });
   if (!keys.length) return;
   update(function(s){
     return Object.assign({}, s, {seenReminders: Array.from(new Set(s.seenReminders.concat(keys)))});
@@ -1486,6 +1546,8 @@ function renderUpcoming(){
 /* ---------- notifications ---------- */
 function renderNotifications(){
   $("ntOn").checked = !!state.notificationsOn;
+  $("ntAll").checked = !!state.remindAll;
+  $("nt3").checked = !!state.remind3;
   setSeg($("ntBySeg"), "data-by", state.notifyBy);
   $("ntEmailWrap").classList.toggle("hidden", state.notifyBy !== "email");
   $("ntEmail").value = state.notifyEmail || "";
@@ -2302,6 +2364,14 @@ function init(){
     var on = $("ntOn").checked;
     update(function(s){ return Object.assign({}, s, {notificationsOn: on}); }, true);
     renderNotifications(); updateBell();
+  });
+  $("ntAll").addEventListener("change", function(){
+    update(function(s){ return Object.assign({}, s, {remindAll: $("ntAll").checked}); }, true);
+    updateBell();
+  });
+  $("nt3").addEventListener("change", function(){
+    update(function(s){ return Object.assign({}, s, {remind3: $("nt3").checked}); }, true);
+    updateBell();
   });
   $("ntEmailSaveBtn").addEventListener("click", function(){
     var v = $("ntEmail").value.trim();
