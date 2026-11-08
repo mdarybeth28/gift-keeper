@@ -1,0 +1,2420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gift Keeper</title>
+<style>
+  :root{
+    --green:#2f7d4f; --green-dark:#256b42; --green-soft:#e7f2ea;
+    --page:#faf6ef; --card:#ffffff; --ink:#2b2b26; --muted:#6f6a5e;
+    --line:#e3ddd0; --warn:#b3261e; --warn-soft:#fbeae8; --amber:#8a6d1a; --amber-soft:#fbf3d9;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html{font-size:18px;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+       background:var(--page);color:var(--ink);line-height:1.45;}
+  .wrap{max-width:760px;margin:0 auto;padding:16px 16px 48px;}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
+       max-width:760px;margin:0 auto;padding:14px 16px 0;}
+  .brand{font-size:1.45rem;font-weight:800;color:var(--green-dark);}
+  .brand small{display:block;font-size:.82rem;font-weight:600;color:var(--muted);}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+       padding:18px;margin:14px 0;box-shadow:0 1px 3px rgba(60,50,20,.06);}
+  h1{font-size:1.6rem;margin:.2em 0 .4em;}
+  h2{font-size:1.25rem;margin:.2em 0 .5em;color:var(--green-dark);}
+  h3{font-size:1.05rem;margin:1em 0 .35em;color:var(--green-dark);}
+  p{margin:.4em 0;}
+  .muted{color:var(--muted);}
+  .small{font-size:.88rem;}
+  label{display:block;font-weight:700;margin:14px 0 6px;}
+  input,select,textarea{width:100%;font-size:1rem;padding:13px 14px;border:1.5px solid var(--line);
+       border-radius:12px;background:#fff;color:var(--ink);font-family:inherit;}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-offset:1px;}
+  textarea{min-height:74px;resize:vertical;}
+  .btn{display:inline-block;width:100%;text-align:center;background:var(--green);color:#fff;border:none;
+       font-size:1.08rem;font-weight:700;padding:15px 18px;border-radius:12px;cursor:pointer;
+       min-height:54px;text-decoration:none;font-family:inherit;}
+  .btn:active{background:var(--green-dark);}
+  .btn.secondary{background:#fff;color:var(--green-dark);border:2px solid var(--green);}
+  .btn.plain{background:var(--green-soft);color:var(--green-dark);}
+  .btn.danger{background:#fff;color:var(--warn);border:2px solid var(--warn);}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+  .btnrow .btn{flex:1 1 160px;width:auto;}
+  .iconbtn{position:relative;background:var(--green-soft);color:var(--green-dark);border:none;border-radius:10px;
+       font-size:.95rem;font-weight:700;padding:10px 14px;cursor:pointer;min-height:44px;font-family:inherit;}
+  .iconbtn .dot{position:absolute;top:6px;right:6px;width:11px;height:11px;border-radius:50%;background:var(--warn);}
+  .tabs{display:flex;gap:8px;margin:6px 0 4px;flex-wrap:wrap;}
+  .tabs button{flex:1 1 120px;padding:13px 8px;font-size:1rem;font-weight:700;border-radius:12px;cursor:pointer;
+       border:2px solid var(--green);background:#fff;color:var(--green-dark);font-family:inherit;min-height:50px;}
+  .tabs button.on{background:var(--green);color:#fff;}
+  .navrow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0;}
+  .personcard{display:flex;gap:14px;align-items:flex-start;background:#fff;border:1.5px solid var(--line);
+       border-radius:var(--radius);padding:16px;margin:10px 0;cursor:pointer;box-shadow:0 1px 3px rgba(60,50,20,.06);}
+  .personcard:active{border-color:var(--green);}
+  .avatar{width:56px;height:56px;flex:none;border-radius:50%;color:#fff;font-weight:800;font-size:1.25rem;
+       display:flex;align-items:center;justify-content:center;}
+  .pname{font-size:1.2rem;font-weight:800;word-break:break-word;}
+  .pmeta{font-size:.9rem;color:var(--muted);}
+  .giftrow{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0;background:#fff;}
+  .giftrow .gt{font-weight:700;font-size:1.05rem;}
+  .giftrow .gd{font-size:.9rem;color:var(--muted);}
+  .giftrow img.thumb{width:72px;height:72px;object-fit:cover;border-radius:10px;flex:none;}
+  img.preview{max-width:100%;max-height:220px;border-radius:12px;margin-top:8px;}
+  .pill{display:inline-block;font-size:.78rem;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap;
+       background:var(--green-soft);color:var(--green-dark);}
+  .pill.warn{background:var(--warn);color:#fff;}
+  .pill.amber{background:#e7c65a;color:#4d3d05;}
+  .kv{margin:6px 0;}
+  .kv .k{font-size:.82rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  .kv .v{font-size:1.05rem;}
+  .msg{border-radius:12px;padding:12px 14px;margin:12px 0;display:none;}
+  .msg.err{display:block;background:var(--warn-soft);border:1.5px solid #eec5c1;color:#7c1a14;}
+  .msg.ok{display:block;background:var(--green-soft);border:1.5px solid #bcd8c4;color:var(--green-dark);}
+  #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--green-dark);color:#fff;
+       padding:13px 20px;border-radius:999px;font-weight:700;font-size:.98rem;box-shadow:0 4px 14px rgba(0,0,0,.25);
+       opacity:0;pointer-events:none;transition:opacity .25s;max-width:92vw;text-align:center;z-index:60;}
+  #toast.show{opacity:1;}
+  .overlay{position:fixed;inset:0;background:var(--page);z-index:50;overflow:auto;}
+  .seg{display:flex;gap:8px;flex-wrap:wrap;}
+  .seg button{flex:1 1 100px;padding:14px 8px;font-size:1rem;font-weight:700;border-radius:12px;cursor:pointer;
+       border:2px solid var(--line);background:#fff;color:var(--ink);font-family:inherit;min-height:54px;}
+  .seg button.on{border-color:var(--green);background:var(--green-soft);color:var(--green-dark);}
+  .switchrow{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .hidden{display:none !important;}
+  .center{text-align:center;}
+  .big-emoji{font-size:3.4rem;text-align:center;line-height:1.15;}
+  .bar{height:10px;border-radius:999px;background:var(--green-soft);overflow:hidden;margin-top:4px;}
+  .bar > div{height:100%;background:var(--green);border-radius:999px;}
+  .datebadge{width:64px;flex:none;text-align:center;background:var(--green-soft);border-radius:12px;padding:8px 2px;}
+  .datebadge .m{font-size:.75rem;font-weight:800;text-transform:uppercase;color:var(--green-dark);}
+  .datebadge .d{font-size:1.5rem;font-weight:800;line-height:1.1;}
+  .rowline{display:flex;gap:12px;align-items:center;background:#fff;border:1.5px solid var(--line);
+       border-radius:var(--radius);padding:12px 14px;margin:8px 0;cursor:pointer;}
+  .checkline{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;background:#fff;}
+  .checkline input[type=checkbox]{width:26px;height:26px;flex:none;margin-top:2px;}
+  .footlinks{text-align:center;margin:26px 0 8px;}
+  .footlinks button{background:none;border:none;color:var(--green-dark);font-weight:700;font-size:.95rem;cursor:pointer;font-family:inherit;text-decoration:underline;}
+  @media print{ header.top,.noprint{display:none !important;} body{background:#fff;} .card{box-shadow:none;} }
+</style>
+</head>
+<body>
+
+<!-- ============ LOCK OVERLAY (only if the user turned the optional lock ON, on this device) ============ -->
+<div id="lockScreen" class="overlay hidden">
+  <div class="wrap">
+    <div class="card center" style="margin-top:40px;">
+      <div class="big-emoji">🎁</div>
+      <h1>Gift Keeper is locked</h1>
+      <p class="muted">Type your PIN to open it on this device.</p>
+      <label for="lockCode">Your PIN</label>
+      <input id="lockCode" type="password" inputmode="numeric" autocomplete="off" maxlength="4" style="text-align:center;font-size:1.3rem;">
+      <div id="lockMsg" class="msg err"></div>
+      <p><button class="btn" id="lockOpenBtn">Open</button></p>
+      <p><button class="iconbtn" id="lockSignOutBtn">Sign out instead</button></p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PUBLIC FRONT DOOR ============ -->
+<div id="frontScreen" class="hidden">
+  <div class="wrap">
+    <div class="center" style="margin-top:26px;">
+      <div class="big-emoji">🎁</div>
+      <h1>Never lose a gift again.</h1>
+      <p>Gift Keeper keeps your whole list in one place — who you bought for, what you got them, and <b>where you hid it.</b></p>
+      <p class="muted">Birthdays and holidays too, with a little reminder before they sneak up on you.</p>
+    </div>
+    <div class="card center">
+      <p style="font-size:1.2rem;font-weight:800;">$11.99 — one time. No ads. No monthly anything.</p>
+      <p><a class="btn" href="https://buy.stripe.com/eVq4gzgEScLdfSd9470ZW01">Get Gift Keeper</a></p>
+      <p class="muted">I let everyone in by hand, usually the same day. Check out with the same email you'll sign in with.</p>
+    </div>
+    <div class="card">
+      <h2>Already have Gift Keeper?</h2>
+      <div class="btnrow">
+        <button class="btn" id="frontSignInBtn" type="button">Sign in</button>
+        <button class="btn secondary" id="frontRequestBtn" type="button">Request access</button>
+      </div>
+      <p class="small muted" style="margin-top:12px;">First time: open your sign-in link in Safari or Chrome. Don't save Gift Keeper as a home-screen icon — those forget you.</p>
+    </div>
+    <div class="footlinks noprint">
+      <button id="frontPrivacyBtn" type="button">Privacy</button> ·
+      <button id="frontTermsBtn" type="button">Terms</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ AUTH ============ -->
+<div id="authScreen" class="hidden">
+  <div class="wrap">
+    <div class="center" style="margin-top:26px;">
+      <div class="big-emoji">🎁</div>
+      <h1>Gift Keeper</h1>
+      <p class="muted">Who you bought for, what you got them,<br>and where you hid it.</p>
+    </div>
+    <div class="card">
+      <p><button class="iconbtn" id="authBackBtn" type="button">← Front page</button></p>
+      <div class="tabs">
+        <button id="tabSignIn" class="on" type="button">Sign in</button>
+        <button id="tabNew" type="button">I'm new here</button>
+        <button id="tabRequest" type="button">Request access</button>
+      </div>
+
+      <div id="signInPane">
+        <label for="siEmail">Email</label>
+        <input id="siEmail" type="email" autocomplete="email" placeholder="you@example.com">
+        <label for="siPass">Password</label>
+        <input id="siPass" type="password" autocomplete="current-password" placeholder="Your password">
+        <div id="siMsg" class="msg"></div>
+        <p style="margin-top:16px;"><button class="btn" id="signInBtn" type="button">Sign in</button></p>
+        <p class="center"><button class="iconbtn" id="forgotBtn" type="button">I forgot my password</button></p>
+      </div>
+
+      <div id="newPane" class="hidden">
+        <p class="muted">Approved and ready to start? <b>Create your password</b> right here — this is the step for folks who were let in and never had a password. (Forgot password is only for people who had one and forgot it.)</p>
+        <label for="nuEmail">Email</label>
+        <input id="nuEmail" type="email" autocomplete="email" placeholder="The email you were approved with">
+        <label for="nuPass">Create your password</label>
+        <input id="nuPass" type="password" autocomplete="new-password" placeholder="At least 8 characters">
+        <label for="nuPass2">Type it once more</label>
+        <input id="nuPass2" type="password" autocomplete="new-password" placeholder="Same password again">
+        <div id="nuMsg" class="msg"></div>
+        <p style="margin-top:16px;"><button class="btn" id="createBtn" type="button">Create my password</button></p>
+      </div>
+
+      <div id="requestPane" class="hidden">
+        <p class="muted">Gift Keeper is let in by hand. Ask here, and Marybeth will let you in — usually the same day. Use the same email you'll sign in with.</p>
+        <label for="rqEmail">Email</label>
+        <input id="rqEmail" type="email" autocomplete="email" placeholder="you@example.com">
+        <div id="rqMsg" class="msg"></div>
+        <p style="margin-top:16px;"><button class="btn" id="requestBtn" type="button">Request access</button></p>
+      </div>
+    </div>
+    <div class="footlinks noprint">
+      <button id="authPrivacyBtn" type="button">Privacy</button> ·
+      <button id="authTermsBtn" type="button">Terms</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CHOOSE PASSWORD (approved first-timers + password resets) ============ -->
+<div id="setPwScreen" class="hidden">
+  <div class="wrap">
+    <div class="card" style="margin-top:30px;">
+      <div class="big-emoji">🎁</div>
+      <h1>Choose your password</h1>
+      <p class="muted" id="setPwIntro">You're approved. Set a password and use it to sign in from now on.</p>
+      <label for="pwNew">Password</label>
+      <input id="pwNew" type="password" autocomplete="new-password" placeholder="At least 8 characters">
+      <label for="pwNew2">Type it once more</label>
+      <input id="pwNew2" type="password" autocomplete="new-password" placeholder="Same password again">
+      <div id="pwMsg" class="msg"></div>
+      <p style="margin-top:16px;"><button class="btn" id="pwSaveBtn" type="button">Save my password</button></p>
+      <p class="center"><button class="iconbtn" id="pwSignOutBtn" type="button">Sign out instead</button></p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ NOT APPROVED YET ============ -->
+<div id="gateScreen" class="hidden">
+  <div class="wrap">
+    <div class="card" style="margin-top:30px;">
+      <div class="big-emoji">🎁</div>
+      <h1>Gift Keeper is private</h1>
+      <p id="gateText">This email isn't on the approved list yet. Marybeth lets everyone in by hand — ask for access and she'll take care of it, usually the same day.</p>
+      <div id="gateMsg" class="msg"></div>
+      <p><button class="btn" id="gateRequestBtn" type="button">Request access</button></p>
+      <p class="center"><button class="iconbtn" id="gateSignOutBtn" type="button">Sign out</button></p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
+<div id="appScreen" class="hidden">
+  <header class="top">
+    <div class="brand">🎁 Gift Keeper<small id="whoLine"></small></div>
+    <div>
+      <button class="iconbtn" id="bellBtn" type="button">🔔<span class="dot hidden" id="bellDot"></span></button>
+      <button class="iconbtn" id="signOutBtn" type="button">Sign out</button>
+    </div>
+    <div class="navrow" style="width:100%;">
+      <button class="iconbtn" data-nav="view-people" type="button">👥 People</button>
+      <button class="iconbtn" data-nav="view-upcoming" type="button">📅 Upcoming</button>
+      <button class="iconbtn" data-nav="view-budget" type="button">💰 Budget</button>
+      <button class="iconbtn" data-nav="view-archived" type="button">🗄️ Archived</button>
+      <button class="iconbtn" data-nav="view-import" type="button">📥 Import dates</button>
+      <button class="iconbtn" data-nav="view-feedback" type="button">💬 Feedback</button>
+      <button class="iconbtn" data-nav="view-settings" type="button">⚙️ Settings</button>
+      <button class="iconbtn hidden" id="adminNavBtn" data-nav="view-admin" type="button">🛡️ Admin</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- ===== PEOPLE ===== -->
+    <section id="view-people" class="hidden">
+      <h1>People</h1>
+      <p class="muted">Tap a person to see their dates, sizes and gifts.</p>
+      <div id="peopleList"></div>
+      <p id="noPeople" class="muted hidden">No one here yet. Add the first person you buy gifts for.</p>
+      <p style="margin-top:14px;"><button class="btn" id="addPersonBtn" type="button">➕ Add a person</button></p>
+      <div class="card">
+        <h2>Merge two people</h2>
+        <p class="muted small">For when the same person got saved twice. Everything moves onto the one you keep; the other is deleted.</p>
+        <label for="mergeA">First person</label>
+        <select id="mergeA"></select>
+        <label for="mergeB">Second person</label>
+        <select id="mergeB"></select>
+        <label for="mergeKeep">Which one keeps the name?</label>
+        <select id="mergeKeep"></select>
+        <div id="mergeMsg" class="msg"></div>
+        <p style="margin-top:10px;"><button class="btn secondary" id="mergeBtn" type="button">Merge them</button></p>
+      </div>
+    </section>
+
+    <!-- ===== PERSON FORM (add / edit) ===== -->
+    <section id="view-person-form" class="hidden">
+      <p><button class="iconbtn" id="personFormBack" type="button">← Back</button></p>
+      <div class="card">
+        <h1 id="personFormTitle">Add a person</h1>
+        <p class="muted small">Only their name is needed. You can add the rest later.</p>
+        <label for="pfName">Their name *</label>
+        <input id="pfName" type="text" placeholder="For example: Jane Doe" autocomplete="off">
+        <label for="pfRel">Who are they to you? (optional)</label>
+        <input id="pfRel" type="text" placeholder="Mom, neighbor, friend">
+        <label for="pfBirthday">Birthday (optional)</label>
+        <input id="pfBirthday" type="date">
+        <label>Group</label>
+        <div class="seg" id="pfCatSeg"></div>
+        <label for="pfSizes">Sizes (optional)</label>
+        <input id="pfSizes" type="text" placeholder="Sweater large, shoe 7.5">
+        <label for="pfFavorites">Favorite things (optional)</label>
+        <textarea id="pfFavorites" placeholder="Lavender soap, dark chocolate"></textarea>
+        <label for="pfHobbies">Hobbies and interests (optional)</label>
+        <input id="pfHobbies" type="text" placeholder="Gardening, crossword puzzles">
+        <label for="pfNotes">Good to remember (optional)</label>
+        <textarea id="pfNotes" placeholder="Please avoid strong perfumes"></textarea>
+        <div id="pfMsg" class="msg"></div>
+        <p style="margin-top:16px;"><button class="btn" id="personSaveBtn" type="button">Save person</button></p>
+      </div>
+    </section>
+
+    <!-- ===== PERSON DETAIL ===== -->
+    <section id="view-person" class="hidden">
+      <p><button class="iconbtn" data-nav="view-people" type="button">← Back to People</button></p>
+      <div class="card">
+        <div style="display:flex;gap:14px;align-items:center;">
+          <div class="avatar" id="pdAvatar">?</div>
+          <div style="min-width:0;">
+            <h1 id="pdName" style="margin:0;"></h1>
+            <p class="muted" id="pdMeta" style="margin:0;"></p>
+          </div>
+        </div>
+        <p id="pdArchivedNote" class="hidden" style="margin-top:10px;"></p>
+        <div class="btnrow">
+          <button class="btn" id="pdAddGiftBtn" type="button">➕ Add gift</button>
+          <button class="btn secondary" id="pdEditBtn" type="button">✏️ Edit</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Important dates</h2>
+        <div id="pdOccasions"></div>
+        <h3>Add an occasion</h3>
+        <label for="occHoliday">Pick a holiday…</label>
+        <select id="occHoliday"></select>
+        <label for="occLabel">What is it?</label>
+        <input id="occLabel" type="text" placeholder="For example: Graduation">
+        <label for="occKind">Kind</label>
+        <select id="occKind">
+          <option value="birthday">Birthday</option>
+          <option value="anniversary">Anniversary</option>
+          <option value="holiday">Holiday</option>
+          <option value="custom" selected>Something else</option>
+        </select>
+        <label for="occDate">Date</label>
+        <input id="occDate" type="date">
+        <div id="occMsg" class="msg"></div>
+        <p style="margin-top:10px;"><button class="btn secondary" id="occAddBtn" type="button">Save occasion</button></p>
+      </div>
+      <div class="card">
+        <h2>Sizes and favorite things</h2>
+        <div id="pdDetails"></div>
+      </div>
+      <div class="card">
+        <h2 id="pdGiftsTitle">Gifts</h2>
+        <p class="muted" id="pdSpent"></p>
+        <div id="pdGifts"></div>
+      </div>
+      <div class="card">
+        <h2>Archive or delete</h2>
+        <p class="muted small" id="pdArchiveText"></p>
+        <div class="btnrow">
+          <button class="btn plain" id="pdArchiveBtn" type="button">Archive this person</button>
+          <button class="btn danger" id="pdDeleteBtn" type="button">Delete this person</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== GIFT FORM (add / edit) ===== -->
+    <section id="view-gift-form" class="hidden">
+      <p><button class="iconbtn" id="giftFormBack" type="button">← Back</button></p>
+      <div class="card">
+        <h1 id="giftFormTitle">Add a gift</h1>
+        <label for="gfPerson">Who is it for? *</label>
+        <select id="gfPerson"></select>
+        <label for="gfName">Gift name *</label>
+        <input id="gfName" type="text" placeholder="For example: heated neck wrap">
+        <label for="gfOccasion">Occasion</label>
+        <select id="gfOccasion"></select>
+        <div class="btnrow">
+          <div style="flex:1 1 160px;">
+            <label for="gfPrice">Price in dollars</label>
+            <input id="gfPrice" type="text" inputmode="decimal" placeholder="24.50">
+          </div>
+          <div style="flex:1 1 160px;">
+            <label for="gfDate">Purchase date</label>
+            <input id="gfDate" type="date">
+          </div>
+        </div>
+        <label for="gfHiding">Where did you hide it?</label>
+        <input id="gfHiding" type="text" placeholder="Top shelf of the hall closet">
+        <label>Progress so far</label>
+        <div class="seg" id="gfStatusSeg"></div>
+        <label for="gfIdea">Why this gift? (optional)</label>
+        <textarea id="gfIdea" placeholder="She always rubs her shoulders after gardening"></textarea>
+        <h3>📷 Photo of the gift (optional)</h3>
+        <img id="gfPhotoPrev" class="preview hidden" alt="The gift you added">
+        <div class="btnrow">
+          <button class="btn plain" id="gfPhotoBtn" type="button">Choose a photo</button>
+          <button class="btn secondary hidden" id="gfPhotoRemove" type="button">Remove photo</button>
+        </div>
+        <input id="gfPhotoFile" type="file" accept="image/*" class="hidden">
+        <h3>🚚 Shipping (optional)</h3>
+        <label for="gfShipPhotoBtn">Shipping label photo</label>
+        <img id="gfShipPrev" class="preview hidden" alt="The shipping label you added">
+        <div class="btnrow">
+          <button class="btn plain" id="gfShipPhotoBtn" type="button">Add a label photo</button>
+          <button class="btn secondary hidden" id="gfShipRemove" type="button">Remove label photo</button>
+        </div>
+        <input id="gfShipFile" type="file" accept="image/*" class="hidden">
+        <label for="gfCarrier">Shipping carrier (optional)</label>
+        <select id="gfCarrier"></select>
+        <label for="gfTracking">Tracking number (optional)</label>
+        <input id="gfTracking" type="text" placeholder="For example: 9400 1000 0000 0000 0000 00">
+        <div id="gfMsg" class="msg"></div>
+        <p style="margin-top:16px;"><button class="btn" id="giftSaveBtn" type="button">Save gift</button></p>
+        <p id="giftDeleteWrap" class="hidden"><button class="btn danger" id="giftDeleteBtn" type="button">Delete this gift</button></p>
+      </div>
+    </section>
+
+    <!-- ===== UPCOMING ===== -->
+    <section id="view-upcoming" class="hidden">
+      <h1>Upcoming occasions</h1>
+      <p class="muted" id="upcomingSub"></p>
+      <div id="upcomingList"></div>
+      <p style="margin-top:12px;"><button class="btn secondary" id="upcomingToggleBtn" type="button">Show all occasions</button></p>
+      <p style="margin-top:8px;"><button class="btn plain" data-nav="view-notifications" type="button">🔔 Reminder settings</button></p>
+    </section>
+
+    <!-- ===== NOTIFICATIONS ===== -->
+    <section id="view-notifications" class="hidden">
+      <p><button class="iconbtn" data-nav="view-upcoming" type="button">← Upcoming</button></p>
+      <div class="card">
+        <h1>Notification settings</h1>
+        <p class="muted">Get a nudge before a birthday, anniversary or occasion.</p>
+        <div class="switchrow">
+          <p style="margin:0;"><b>Reminders are on</b><br><span class="small muted">Alerts never name the person or the gift. Details stay behind your sign-in.</span></p>
+          <input id="ntOn" type="checkbox" style="width:30px;height:30px;flex:none;">
+        </div>
+        <h3>How should we remind you?</h3>
+        <div class="seg" id="ntBySeg">
+          <button type="button" data-by="browser">Browser alert<span class="small" style="display:block;font-weight:400;">A pop-up in this browser</span></button>
+          <button type="button" data-by="email">Email<span class="small" style="display:block;font-weight:400;">Sent to your inbox</span></button>
+        </div>
+        <div id="ntEmailWrap" class="hidden">
+          <label for="ntEmail">Your email address</label>
+          <input id="ntEmail" type="email" autocomplete="email" placeholder="name@example.com">
+          <div id="ntMsg" class="msg"></div>
+          <p><button class="btn secondary" id="ntEmailSaveBtn" type="button">Save email</button></p>
+          <p class="small muted">Sending real emails needs an email service connected on the server, so for now this saves the address only.</p>
+        </div>
+        <p class="small warn hidden" id="ntDenied" style="color:var(--warn);font-weight:700;">This browser has blocked alerts. Allow them in your browser settings, then try again.</p>
+        <h3>How many days before?</h3>
+        <p class="muted small">You'll get one alert per occasion, this many days ahead.</p>
+        <div class="seg" id="ntDaysSeg">
+          <button type="button" data-days="7">7<span style="display:block;font-weight:400;" class="small">days before</span></button>
+          <button type="button" data-days="14">14<span style="display:block;font-weight:400;" class="small">days before</span></button>
+          <button type="button" data-days="30">30<span style="display:block;font-weight:400;" class="small">days before</span></button>
+        </div>
+        <h3>What's coming up</h3>
+        <div id="ntPreview"></div>
+      </div>
+    </section>
+
+    <!-- ===== BUDGET ===== -->
+    <section id="view-budget" class="hidden">
+      <h1>Gift budget</h1>
+      <p class="muted" id="budgetSub"></p>
+      <div class="card">
+        <h2>Remaining this year</h2>
+        <p id="budgetRemaining" style="font-size:2.2rem;font-weight:800;margin:.1em 0;"></p>
+        <div class="bar"><div id="budgetBar" style="width:0%;"></div></div>
+        <p><span class="muted">Spent </span><b id="budgetSpent"></b>
+           <span style="float:right;"><span class="muted">Budget </span><b id="budgetTotal"></b></span></p>
+        <div id="budgetEditWrap" class="hidden">
+          <label for="budgetInput">Yearly budget in dollars</label>
+          <input id="budgetInput" type="text" inputmode="decimal">
+          <p><button class="btn" id="budgetSaveBtn" type="button">Save budget</button></p>
+        </div>
+        <p><button class="iconbtn" id="budgetChangeBtn" type="button">Change yearly budget</button></p>
+      </div>
+      <div class="card">
+        <h2>Spent by person</h2>
+        <div id="budgetByPerson"></div>
+      </div>
+      <div class="card">
+        <h2>Spent by occasion</h2>
+        <div id="budgetByOccasion"></div>
+      </div>
+      <div class="card">
+        <h2>Spend limit per occasion</h2>
+        <p class="muted small">Set how much you'd like to spend on each event. Leave it blank for no limit.</p>
+        <div id="budgetLimits"></div>
+      </div>
+    </section>
+
+    <!-- ===== ARCHIVED ===== -->
+    <section id="view-archived" class="hidden">
+      <h1>Archived</h1>
+      <p class="muted">Put aside, not gone. Restore anything here whenever you need it.</p>
+      <div id="archivedEmpty" class="card hidden">
+        <p style="font-weight:700;">Nothing archived</p>
+        <p class="muted">When you archive a person or a gift, it waits here until you restore it.</p>
+      </div>
+      <h2 id="archivedPeopleTitle" class="hidden">People</h2>
+      <div id="archivedPeople"></div>
+      <h2 id="archivedGiftsTitle" class="hidden">Gifts</h2>
+      <div id="archivedGifts"></div>
+    </section>
+
+    <!-- ===== CALENDAR IMPORT ===== -->
+    <section id="view-import" class="hidden">
+      <h1>Import dates from a calendar</h1>
+      <p class="muted">Bring birthdays and anniversaries in from Google Calendar or Apple Calendar. Pick the calendar file (.ics) or the .zip Google gives you. Importing only ever adds — it merges with what's here, never replaces it.</p>
+      <div class="card">
+        <label for="impFile">Calendar file (.ics or .zip)</label>
+        <input id="impFile" type="file" accept=".ics,.zip">
+        <div id="impMsg" class="msg"></div>
+        <div id="impReview"></div>
+        <p id="impSaveWrap" class="hidden" style="margin-top:12px;"><button class="btn" id="impSaveBtn" type="button">Save the ticked dates</button></p>
+      </div>
+    </section>
+
+    <!-- ===== FEEDBACK ===== -->
+    <section id="view-feedback" class="hidden">
+      <div class="card">
+        <h1>Send feedback</h1>
+        <p class="muted">One tap sends your message to Marybeth.</p>
+        <label for="fbMessage">What would you like to tell her?</label>
+        <textarea id="fbMessage" maxlength="4000" placeholder="The package tracking button didn't work on my phone." style="min-height:130px;"></textarea>
+        <label for="fbEmail">Your email (optional)</label>
+        <input id="fbEmail" type="email" autocomplete="email" placeholder="So she can reply">
+        <div id="fbMsg" class="msg"></div>
+        <p style="margin-top:14px;"><button class="btn" id="fbSendBtn" type="button">Send feedback</button></p>
+      </div>
+    </section>
+
+    <!-- ===== SETTINGS ===== -->
+    <section id="view-settings" class="hidden">
+      <div class="card">
+        <h1>Settings</h1>
+        <div class="kv"><div class="k">Signed in as</div><div class="v" id="setEmail">—</div></div>
+        <h3>🔔 Reminder notifications</h3>
+        <p class="muted small">Choose email or browser alerts, 7, 14 or 30 days before each date.</p>
+        <p><button class="btn plain" data-nav="view-notifications" type="button">Choose how you're reminded</button></p>
+        <h3>📥 Calendars</h3>
+        <p class="muted small">Bring birthdays and anniversaries in from Google Calendar or Apple Calendar.</p>
+        <p><button class="btn plain" data-nav="view-import" type="button">Import dates from a calendar</button></p>
+        <h3>💬 Send feedback</h3>
+        <p class="muted small">Something not working, or an idea for Gift Keeper? Tell Marybeth in one tap.</p>
+        <p><button class="btn plain" data-nav="view-feedback" type="button">Send feedback</button></p>
+      </div>
+      <div class="card">
+        <h2>🔒 Screen lock (optional)</h2>
+        <p class="muted small">The lock is off unless you turn it on. It only locks this device's screen — your list itself is safe in your account, and signing out always works. The PIN never leaves this device.</p>
+        <div id="lockOffWrap">
+          <div class="switchrow">
+            <p style="margin:0;">Use a PIN to open Gift Keeper on <b>this device</b></p>
+            <input id="lockToggle" type="checkbox" style="width:30px;height:30px;flex:none;">
+          </div>
+          <div id="lockSetup" class="hidden">
+            <label for="lockNew">Choose a PIN (4 numbers)</label>
+            <input id="lockNew" type="password" inputmode="numeric" autocomplete="off" maxlength="4">
+            <label for="lockNew2">Type it once more</label>
+            <input id="lockNew2" type="password" inputmode="numeric" autocomplete="off" maxlength="4">
+            <div id="lockSetMsg" class="msg"></div>
+            <p style="margin-top:12px;"><button class="btn" id="lockSaveBtn" type="button">Save my PIN</button></p>
+          </div>
+        </div>
+        <div id="lockOnWrap" class="hidden">
+          <p>✅ Screen lock is <b>on</b> for this device.</p>
+          <label for="pinCurrent">Current PIN</label>
+          <input id="pinCurrent" type="password" inputmode="numeric" autocomplete="off" maxlength="4">
+          <label for="pinNew">New PIN</label>
+          <input id="pinNew" type="password" inputmode="numeric" autocomplete="new-password" maxlength="4">
+          <label for="pinNew2">Type it again</label>
+          <input id="pinNew2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="4">
+          <div id="pinMsg" class="msg"></div>
+          <div class="btnrow">
+            <button class="btn" id="pinChangeBtn" type="button">Save new PIN</button>
+            <button class="btn danger" id="pinOffBtn" type="button">Turn the lock off</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>💾 Your gift list backup</h2>
+        <p class="muted small">Save a copy of your list as a file, or load a backup file you saved before. Loading a backup replaces the people and gifts on this list with the file's — your account copy updates to match.</p>
+        <div class="btnrow">
+          <button class="btn" id="backupBtn" type="button">Save a backup file</button>
+          <button class="btn secondary" id="backupLoadBtn" type="button">Load a backup file</button>
+        </div>
+        <input id="backupFile" type="file" accept="application/json,.json" class="hidden">
+        <div id="backupMsg" class="msg"></div>
+        <h3>Account</h3>
+        <p><button class="btn secondary" id="setSignOutBtn" type="button">Sign out</button></p>
+      </div>
+    </section>
+
+    <!-- ===== ADMIN (owner only) ===== -->
+    <section id="view-admin" class="hidden">
+      <h1>Access requests</h1>
+      <p class="muted" id="adminSub"></p>
+      <div class="card">
+        <h2 id="adminPendingTitle">Waiting for you</h2>
+        <div id="adminPending"></div>
+      </div>
+      <div class="card">
+        <h2>Approved people</h2>
+        <div id="adminApproved"></div>
+      </div>
+      <div class="card" id="adminDecidedCard">
+        <h2>Earlier decisions</h2>
+        <div id="adminDecided"></div>
+      </div>
+    </section>
+
+    <!-- ===== PRIVACY ===== -->
+    <section id="view-privacy" class="hidden">
+      <p><button class="iconbtn" data-legalback type="button">← Back</button></p>
+      <div class="card">
+        <h1>Gift Keeper — Privacy</h1>
+        <p class="muted">Last updated: November 2026</p>
+        <p>Gift Keeper is run by Mary Beth (Mary Beth's Finds). Questions: use the Send feedback button inside Gift Keeper.</p>
+        <p>What Gift Keeper keeps: your email address, and the gift lists you type in — people, gifts, hiding places, dates, and amounts you choose to add. That's it.</p>
+        <p>What it does NOT do: no ads, no trackers, and your list is never sold or shared with anyone. Nobody else can see your list — every person's list is private to their own sign-in.</p>
+        <p>Payments are handled by Stripe. Gift Keeper never sees or stores your card number.</p>
+        <p>If you want your account and your list deleted, send a feedback message inside the app and it will be removed.</p>
+      </div>
+    </section>
+
+    <!-- ===== TERMS ===== -->
+    <section id="view-terms" class="hidden">
+      <p><button class="iconbtn" data-legalback type="button">← Back</button></p>
+      <div class="card">
+        <h1>Gift Keeper — Terms</h1>
+        <p class="muted">Last updated: November 2026</p>
+        <p>Gift Keeper costs $11.99, paid once. There is no subscription and no ads. Paying gives you your own Gift Keeper account, let in by hand — usually the same day.</p>
+        <p>Check out with the same email you will sign in with, so your payment and your account match.</p>
+        <p>Refunds: if Gift Keeper doesn't work for you, ask within 14 days of paying and you'll get your $11.99 back.</p>
+        <p>Gift Keeper is a helper for your own lists. Keep your sign-in and your PIN to yourself — the PIN lock only works on your own phone.</p>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+"use strict";
+/* ================= Gift Keeper — whole-file rebuild =================
+   Same Supabase project, same gift_lists shape as the live app.
+   State lives in ONE localStorage key (gift-keeper-v1, same name as
+   the old app; different origin, no clash) plus one cloud row per
+   user. The PIN lives only in the local blob — it is stripped (Bo)
+   before anything is upserted, exactly like the live app.        */
+var SUPABASE_URL = "https://sqlebafcftyqqmdsgjrn.supabase.co";
+var SUPABASE_KEY = "sb_publishable_zLttR3cRoFjA1LyTgpDBPg_CiEQVmw9";
+var OWNER_EMAIL = "marybeth.davis28@gmail.com";
+var STORE_KEY = "gift-keeper-v1";
+var PALETTE = ["#1f6f5c","#b45309","#1d4ed8","#7c3aed","#b91c1c","#0f766e"];
+var CATEGORIES = ["Family","Friends","Work","Other"];
+var STATUS_LABELS = {thinking:"Thinking", purchased:"Purchased", wrapped:"Wrapped", given:"Given"};
+var STATUS_ALIAS = {idea:"thinking", bought:"purchased"};
+var CARRIERS = ["","USPS","UPS","FedEx","Other","Yun Express"];
+var HOLIDAYS = [
+  {label:"New Year's Day", month:1, day:1},
+  {label:"Valentine's Day", month:2, day:14},
+  {label:"Easter", month:4, day:5},
+  {label:"Mother's Day", month:5, day:10},
+  {label:"Father's Day", month:6, day:21},
+  {label:"Halloween", month:10, day:31},
+  {label:"Thanksgiving", month:11, day:26},
+  {label:"Christmas Eve", month:12, day:24},
+  {label:"Christmas", month:12, day:25}
+];
+function defaultState(){
+  return {pin:"1234", budget:0, reminderDays:30, notificationsOn:true, notifyBy:"browser",
+          notifyEmail:"", eventLimits:{}, seenReminders:[], people:[], gifts:[]};
+}
+
+/* ---------- tiny helpers ---------- */
+function $(id){ return document.getElementById(id); }
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function toast(msg){
+  var t = $("toast"); t.textContent = msg; t.classList.add("show");
+  setTimeout(function(){ t.classList.remove("show"); }, 2800);
+}
+function showMsg(el, text, ok){
+  el.textContent = text;
+  el.className = "msg " + (ok ? "ok" : "err");
+  el.style.display = "block";
+}
+function hideMsg(el){ el.className = "msg"; el.style.display = "none"; el.textContent = ""; }
+function validEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e || "").trim()); }
+function friendlyErr(e){
+  var m = (e && e.message) ? e.message : String(e || "Something went wrong.");
+  if (/Invalid login credentials/i.test(m)) return "That email and password don't match. Check them, or use Forgot password.";
+  if (/Email not confirmed/i.test(m)) return "Your email isn't confirmed yet — open the email we sent you, tap the link in it, then sign in here.";
+  if (/already registered/i.test(m)) return "That email already has an account. Tap \u201CSign in\u201D above and use your password.";
+  if (/Failed to fetch|NetworkError/i.test(m)) return "Couldn't reach Gift Keeper just now — check your internet and try again.";
+  return m;
+}
+function newId(prefix){
+  if (window.crypto && crypto.randomUUID) return prefix + "-" + crypto.randomUUID();
+  return prefix + "-" + Date.now() + "-" + Math.floor(Math.random() * 1e9);
+}
+function money(n){
+  return new Intl.NumberFormat("en-US", {style:"currency", currency:"USD",
+    maximumFractionDigits: (Number(n) % 1 === 0 ? 0 : 2)}).format(Number(n) || 0);
+}
+function initials(name){
+  return String(name || "?").split(" ").map(function(w){ return w[0]; }).slice(0, 2).join("");
+}
+
+/* ---------- dates (ported from the live app) ---------- */
+function nextOccurrence(month, day){
+  var now = new Date();
+  var d = new Date(now.getFullYear(), month - 1, day);
+  d.setHours(0, 0, 0, 0);
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return d.getTime() >= today.getTime() ? d : new Date(now.getFullYear() + 1, month - 1, day);
+}
+function daysAwayFrom(date){
+  var now = new Date();
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((date.getTime() - today.getTime()) / 864e5);
+}
+function daysLabel(n){
+  return n === 0 ? "Today" : n === 1 ? "Tomorrow" : n < 14 ? "In " + n + " days" :
+         n < 60 ? "In " + Math.round(n / 7) + " weeks" : "In " + Math.round(n / 30) + " months";
+}
+function fmtDateLong(date){
+  return date.toLocaleDateString("en-US", {month:"long", day:"numeric"});
+}
+function todayISO(){
+  var e = new Date();
+  return e.getFullYear() + "-" + String(e.getMonth() + 1).padStart(2, "0") + "-" + String(e.getDate()).padStart(2, "0");
+}
+function upcomingList(st){
+  return st.people.filter(function(p){ return !p.archived; }).flatMap(function(p){
+    return p.occasions.map(function(o){
+      var d = nextOccurrence(o.month, o.day);
+      return {key: p.id + "-" + o.id, personId: p.id, personName: p.name, personColor: p.color,
+              label: o.label, kind: o.kind, date: d, daysAway: daysAwayFrom(d)};
+    });
+  }).sort(function(a, b){ return a.daysAway - b.daysAway; });
+}
+function trackingUrl(carrier, number){
+  var n = String(number || "").trim();
+  if (!n) return null;
+  var r = encodeURIComponent(n);
+  if (carrier === "USPS") return "https://tools.usps.com/go/TrackConfirmAction?tLabels=" + r;
+  if (carrier === "UPS") return "https://www.ups.com/track?tracknum=" + r;
+  if (carrier === "FedEx") return "https://www.fedex.com/fedextrack/?trknbr=" + r;
+  return "https://www.yuntrack.com/parcelTracking?id=" + r;
+}
+
+/* ---------- normalizers (ported from the live app: Ao / jo / Mo) ---------- */
+function Zs(e){ return typeof e === "string" ? e : ""; }
+function arr(e){ return Array.isArray(e) ? e : []; }
+function normPerson(e){
+  var t = e || {};
+  return Object.assign({}, t, {
+    id: Zs(t.id), name: Zs(t.name), relationship: Zs(t.relationship),
+    category: CATEGORIES.indexOf(t.category) >= 0 ? t.category : "Other",
+    color: Zs(t.color) || "#1f6f5c",
+    occasions: arr(t.occasions).map(function(o){
+      var base = {id: Zs(o.id), kind: o.kind != null ? o.kind : "custom", label: Zs(o.label),
+                  month: Number(o.month) || 1, day: Number(o.day) || 1};
+      if (typeof o.title === "string" && o.title) base.title = o.title;
+      return base;
+    }),
+    sizes: Zs(t.sizes), favorites: Zs(t.favorites), hobbies: Zs(t.hobbies), notes: Zs(t.notes),
+    archived: t.archived === true
+  });
+}
+function normGift(e){
+  var t = e || {};
+  return Object.assign({}, t, {
+    id: Zs(t.id), personId: Zs(t.personId), name: Zs(t.name), idea: Zs(t.idea),
+    price: Number(t.price) || 0, boughtOn: Zs(t.boughtOn), occasionLabel: Zs(t.occasionLabel),
+    hidingPlace: Zs(t.hidingPlace),
+    status: STATUS_ALIAS[t.status] != null ? STATUS_ALIAS[t.status] : (t.status != null ? t.status : "thinking"),
+    photo: t.photo != null ? t.photo : null, carrier: t.carrier != null ? t.carrier : "",
+    trackingNumber: Zs(t.trackingNumber), shippingPhoto: t.shippingPhoto != null ? t.shippingPhoto : null,
+    trackingStatus: Zs(t.trackingStatus), trackingUpdatedAt: Zs(t.trackingUpdatedAt),
+    archived: t.archived === true
+  });
+}
+function normState(e){
+  var t = e || {};
+  var d = defaultState();
+  return Object.assign({}, d, t, {
+    pin: Zs(t.pin) || d.pin,
+    budget: Number(t.budget) || 0,
+    reminderDays: Number(t.reminderDays) || d.reminderDays,
+    notificationsOn: t.notificationsOn !== false,
+    notifyBy: t.notifyBy === "email" ? "email" : "browser",
+    notifyEmail: Zs(t.notifyEmail),
+    eventLimits: Object.assign({}, d.eventLimits, t.eventLimits || {}),
+    seenReminders: arr(t.seenReminders),
+    people: arr(t.people).map(normPerson),
+    gifts: arr(t.gifts).map(normGift)
+  });
+}
+/* Name cleanup (live Lo): collapse a doubled word — "Emily Cole Cole" → "Emily Cole". */
+function dedupeName(e){
+  var out = [];
+  String(e || "").trim().split(/\s+/).forEach(function(w){
+    if (out.length && out[out.length - 1].toLowerCase() === w.toLowerCase()) return;
+    out.push(w);
+  });
+  return out.join(" ");
+}
+/* Person-name extraction from a calendar title (live Ro). */
+function extractPersonName(e){
+  var m = /^(.+?)['’]s\b/i.exec(e);
+  var base = m ? m[1] : e.replace(/\b(birthday|bday|anniversary|wedding)\b/gi, "")
+                          .replace(/\bo[f]?\b/gi, " ")
+                          .replace(/[-–—:]/g, " ")
+                          .replace(/\s+/g, " ").trim();
+  return (base.split(/\s*(?:\band\b|&|,|\+)\s*/i)[0] || "").trim();
+}
+function lowerName(e){ return String(e || "").trim().toLowerCase(); }
+/* Repair pass (live zo): an occasion carrying a calendar title files under the
+   person named in that title; names are de-doubled. */
+function repairState(e){
+  var people = e.people.map(function(p){
+    return Object.assign({}, p, {occasions: p.occasions.map(function(o){ return Object.assign({}, o); })});
+  });
+  people.forEach(function(p){
+    p.occasions.slice().forEach(function(o){
+      if (!o.title) return;
+      var r = extractPersonName(o.title);
+      if (!r || lowerName(r) === lowerName(p.name)) return;
+      var target = null;
+      for (var i = 0; i < people.length; i++){ if (lowerName(people[i].name) === lowerName(r)) { target = people[i]; break; } }
+      if (!target){
+        target = {id: newId("p-import"), name: r, relationship: "From calendar", category: "Other",
+                  color: PALETTE[people.length % PALETTE.length] || "#0f766e", occasions: [],
+                  sizes: "", favorites: "", hobbies: "", notes: "From your calendar dates"};
+        people.push(target);
+      }
+      if (!target.occasions.some(function(x){ return x.month === o.month && x.day === o.day; })) target.occasions.push(o);
+      p.occasions = p.occasions.filter(function(x){ return x.id !== o.id; });
+    });
+    p.name = dedupeName(p.name);
+  });
+  return Object.assign({}, e, {people: people});
+}
+function fullNormalize(e){ return repairState(normState(e)); }
+
+/* ---------- merge (ported from the live app: Io) ----------
+   Base state wins; the other state's people/gifts fold in.
+   People match by lowercase trimmed name; occasions dedupe by id
+   or (month, day, label); gifts merge by id, re-pointed to the
+   matched person's id. Empty never overwrites: if either side has
+   people, the result has people. */
+function mergeStates(base, other){
+  var people = base.people.map(function(p){
+    return Object.assign({}, p, {occasions: p.occasions.slice()});
+  });
+  var gifts = base.gifts.map(function(g){ return Object.assign({}, g); });
+  other.people.forEach(function(op){
+    var found = null;
+    for (var i = 0; i < people.length; i++){ if (lowerName(people[i].name) === lowerName(op.name)) { found = people[i]; break; } }
+    if (!found){ people.push(Object.assign({}, op, {occasions: op.occasions.slice()})); return; }
+    op.occasions.forEach(function(o){
+      var dup = found.occasions.some(function(x){
+        return x.id === o.id || (x.month === o.month && x.day === o.day && x.label === o.label);
+      });
+      if (!dup) found.occasions.push(Object.assign({}, o, {id: o.id || newId("o")}));
+    });
+    found.sizes = found.sizes || op.sizes;
+    found.favorites = found.favorites || op.favorites;
+    found.hobbies = found.hobbies || op.hobbies;
+    found.notes = found.notes || op.notes;
+    found.relationship = found.relationship || op.relationship;
+    found.archived = found.archived && op.archived;
+  });
+  var idByName = {};
+  people.forEach(function(p){ idByName[lowerName(p.name)] = p.id; });
+  other.gifts.forEach(function(og){
+    if (gifts.some(function(g){ return g.id === og.id; })) return;
+    var op = null;
+    for (var i = 0; i < other.people.length; i++){ if (other.people[i].id === og.personId) { op = other.people[i]; break; } }
+    gifts.push(Object.assign({}, og, {personId: (op && idByName[lowerName(op.name)]) || og.personId}));
+  });
+  return Object.assign({}, base, {
+    people: people, gifts: gifts,
+    budget: base.budget || other.budget,
+    eventLimits: Object.assign({}, other.eventLimits, base.eventLimits),
+    seenReminders: Array.from(new Set(base.seenReminders.concat(other.seenReminders))),
+    notifyEmail: base.notifyEmail || other.notifyEmail
+  });
+}
+
+/* ---------- store ---------- */
+var sb = null;
+var user = null;
+var state = defaultState();
+var cloudReady = false;
+var saveTimer = null;
+var lockArmedThisLoad = false;
+var currentPersonId = null;
+var editingPersonId = null;
+var editingGiftId = null;
+var giftPhotoData = null;
+var giftShipData = null;
+var upcomingShowAll = false;
+var importEvents = [];
+
+function stripPin(s){ var c = Object.assign({}, s); delete c.pin; delete c.lockOn; return c; }
+function loadLocal(){
+  try {
+    var raw = localStorage.getItem(STORE_KEY);
+    return raw ? fullNormalize(JSON.parse(raw)) : normState(null);
+  } catch (e){ return normState(null); }
+}
+function localPin(){
+  try {
+    var raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return "1234";
+    var o = JSON.parse(raw);
+    return typeof o.pin === "string" && o.pin ? o.pin : "1234";
+  } catch (e){ return "1234"; }
+}
+function lockOnLocal(){
+  try {
+    var raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return false;
+    return JSON.parse(raw).lockOn === true;
+  } catch (e){ return false; }
+}
+function persistLocal(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e){}
+}
+function pushCloud(){
+  if (!user || !cloudReady) return;
+  var data = stripPin(state);
+  sb.from("gift_lists").upsert({user_id: user.id, data: data, updated_at: new Date().toISOString()})
+    .then(function(r){ if (r.error) console.error("The list didn't save to the account", r.error); });
+}
+function schedulePush(){
+  if (saveTimer) window.clearTimeout(saveTimer);
+  saveTimer = window.setTimeout(pushCloud, 900);
+}
+/* Every mutation funnels through here: save local at once, push to the account. */
+function update(fn, immediate){
+  state = fn(state);
+  persistLocal();
+  if (immediate) pushCloud(); else schedulePush();
+}
+function saveNow(fn){ update(fn, true); }
+
+function personById(id){
+  for (var i = 0; i < state.people.length; i++){ if (state.people[i].id === id) return state.people[i]; }
+  return null;
+}
+function giftById(id){
+  for (var i = 0; i < state.gifts.length; i++){ if (state.gifts[i].id === id) return state.gifts[i]; }
+  return null;
+}
+function isOwner(){ return !!user && !!user.email && user.email.toLowerCase() === OWNER_EMAIL; }
+
+/* ---------- navigation ---------- */
+var VIEWS = ["view-people","view-person","view-person-form","view-gift-form","view-upcoming",
+             "view-notifications","view-budget","view-archived","view-import","view-feedback",
+             "view-settings","view-admin","view-privacy","view-terms"];
+var lastListView = "view-people";
+function showScreen(id){
+  ["frontScreen","authScreen","setPwScreen","gateScreen","appScreen","lockScreen"].forEach(function(s){
+    $(s).classList.toggle("hidden", s !== id);
+  });
+  window.scrollTo(0, 0);
+}
+function showView(id){
+  VIEWS.forEach(function(v){ $(v).classList.toggle("hidden", v !== id); });
+  if (id !== "view-privacy" && id !== "view-terms") lastListView = id;
+  window.scrollTo(0, 0);
+  if (id === "view-people") renderPeople();
+  if (id === "view-upcoming") renderUpcoming();
+  if (id === "view-notifications") renderNotifications();
+  if (id === "view-budget") renderBudget();
+  if (id === "view-archived") renderArchived();
+  if (id === "view-settings") renderSettings();
+  if (id === "view-admin") renderAdmin();
+  updateBell();
+}
+function setSeg(segEl, attr, val){
+  Array.prototype.forEach.call(segEl.querySelectorAll("button"), function(b){
+    b.classList.toggle("on", b.getAttribute(attr) === val);
+  });
+}
+function segVal(segEl, attr){
+  var on = segEl.querySelector("button.on");
+  return on ? on.getAttribute(attr) : null;
+}
+function wireSeg(segEl, attr, cb){
+  Array.prototype.forEach.call(segEl.querySelectorAll("button"), function(b){
+    b.addEventListener("click", function(){
+      setSeg(segEl, attr, b.getAttribute(attr));
+      if (cb) cb(b.getAttribute(attr));
+    });
+  });
+}
+function buildSeg(segEl, attr, items, current){
+  segEl.innerHTML = "";
+  items.forEach(function(it){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute(attr, it.value);
+    b.textContent = it.label;
+    if (it.value === current) b.className = "on";
+    segEl.appendChild(b);
+  });
+}
+
+/* ---------- bell (reminders waiting in the window, clears once seen) ---------- */
+function pendingReminders(){
+  if (!state.notificationsOn) return [];
+  return upcomingList(state).filter(function(u){
+    return u.daysAway <= state.reminderDays && state.seenReminders.indexOf(u.key) < 0;
+  });
+}
+function updateBell(){
+  var dot = $("bellDot");
+  if (dot) dot.classList.toggle("hidden", pendingReminders().length === 0);
+}
+function markRemindersSeen(){
+  var keys = upcomingList(state).filter(function(u){ return u.daysAway <= state.reminderDays; })
+    .map(function(u){ return u.key; });
+  if (!keys.length) return;
+  update(function(s){
+    return Object.assign({}, s, {seenReminders: Array.from(new Set(s.seenReminders.concat(keys)))});
+  });
+  updateBell();
+}
+
+/* ---------- people list ---------- */
+function renderPeople(){
+  var list = $("peopleList"); list.innerHTML = "";
+  var folks = state.people.filter(function(p){ return !p.archived; });
+  $("noPeople").classList.toggle("hidden", state.people.length > 0);
+  folks.forEach(function(p){
+    var gifts = state.gifts.filter(function(g){ return g.personId === p.id && !g.archived; });
+    var toGive = gifts.filter(function(g){ return g.status !== "given"; }).length;
+    var occ = p.occasions.map(function(o){
+      var d = nextOccurrence(o.month, o.day);
+      return {label: o.label, date: d, days: daysAwayFrom(d)};
+    }).sort(function(a, b){ return a.days - b.days; })[0];
+    var div = document.createElement("div");
+    div.className = "personcard";
+    var giftsLine = gifts.length === 0 ? "None yet" :
+      toGive + " to give" + (gifts.length ? " · " + gifts[0].name + " (" + (STATUS_LABELS[gifts[0].status] || gifts[0].status).toLowerCase() + ")" : "") +
+      (gifts.length > 1 ? " +" + (gifts.length - 1) + " more" : "");
+    div.innerHTML =
+      '<div class="avatar" style="background:' + esc(p.color) + '">' + esc(initials(p.name)) + '</div>' +
+      '<div style="min-width:0;"><div class="pname">' + esc(p.name) + '</div>' +
+      '<div class="pmeta">' + esc(p.relationship) + '</div>' +
+      '<div style="margin-top:6px;"><span class="muted">Next: </span>' +
+        (occ ? esc(occ.label) + " · " + esc(fmtDateLong(occ.date)) : "No dates saved") + '</div>' +
+      '<div><span class="muted">Gifts: </span>' + esc(giftsLine) + '</div></div>';
+    div.addEventListener("click", function(){ openPerson(p.id); });
+    list.appendChild(div);
+  });
+  // merge pickers
+  var opts = '<option value="">Choose…</option>' + folks.map(function(p){
+    return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>';
+  }).join("");
+  $("mergeA").innerHTML = opts; $("mergeB").innerHTML = opts; $("mergeKeep").innerHTML = opts;
+}
+function doMergePeople(){
+  var a = $("mergeA").value, b = $("mergeB").value, keep = $("mergeKeep").value;
+  var msg = $("mergeMsg"); hideMsg(msg);
+  if (!a || !b || a === b){ showMsg(msg, "Pick two different people to merge."); return; }
+  if (!keep || (keep !== a && keep !== b)){ showMsg(msg, "Pick which name to keep."); return; }
+  var drop = keep === a ? b : a;
+  var keepP = personById(keep), dropP = personById(drop);
+  if (!keepP || !dropP) return;
+  if (!window.confirm(dropP.name + " will be merged into " + keepP.name + " and deleted. This can't be undone.")) return;
+  update(function(s){
+    var people = s.people.filter(function(p){ return p.id !== drop; }).map(function(p){
+      if (p.id !== keep) return p;
+      var occ = p.occasions.slice();
+      dropP.occasions.forEach(function(o){
+        if (!occ.some(function(x){ return x.month === o.month && x.day === o.day && x.kind === o.kind; })) occ.push(o);
+      });
+      var join = function(x, y){ return [String(x || "").trim(), String(y || "").trim()].filter(Boolean).join(" · "); };
+      return Object.assign({}, p, {occasions: occ, sizes: join(p.sizes, dropP.sizes),
+        favorites: join(p.favorites, dropP.favorites), hobbies: join(p.hobbies, dropP.hobbies),
+        notes: join(p.notes, dropP.notes), relationship: p.relationship || dropP.relationship});
+    });
+    var gifts = s.gifts.map(function(g){
+      return g.personId === drop ? Object.assign({}, g, {personId: keep}) : g;
+    });
+    return Object.assign({}, s, {people: people, gifts: gifts});
+  }, true);
+  toast(dropP.name + " was merged into " + keepP.name + ".");
+  renderPeople();
+}
+
+/* ---------- person form ---------- */
+function openPersonForm(id){
+  editingPersonId = id || null;
+  hideMsg($("pfMsg"));
+  var p = id ? personById(id) : null;
+  $("personFormTitle").textContent = p ? "Edit " + p.name.split(" ")[0] : "Add a person";
+  $("pfName").value = p ? p.name : "";
+  $("pfRel").value = p ? (p.relationship || "") : "";
+  $("pfBirthday").value = "";
+  $("pfBirthday").style.display = p ? "none" : "";
+  document.querySelector('label[for="pfBirthday"]').style.display = p ? "none" : "";
+  buildSeg($("pfCatSeg"), "data-cat", CATEGORIES.map(function(c){ return {value: c, label: c}; }), p ? p.category : "Other");
+  wireSeg($("pfCatSeg"), "data-cat");
+  $("pfSizes").value = p ? (p.sizes || "") : "";
+  $("pfFavorites").value = p ? (p.favorites || "") : "";
+  $("pfHobbies").value = p ? (p.hobbies || "") : "";
+  $("pfNotes").value = p ? (p.notes || "") : "";
+  showView("view-person-form");
+}
+function savePerson(){
+  var name = $("pfName").value.trim();
+  if (!name){ showMsg($("pfMsg"), "Please type the person's name."); return; }
+  var cat = segVal($("pfCatSeg"), "data-cat") || "Other";
+  if (editingPersonId){
+    var pid = editingPersonId;
+    update(function(s){
+      return Object.assign({}, s, {people: s.people.map(function(p){
+        if (p.id !== pid) return p;
+        return Object.assign({}, p, {name: name, relationship: $("pfRel").value.trim(),
+          category: cat, sizes: $("pfSizes").value, favorites: $("pfFavorites").value,
+          hobbies: $("pfHobbies").value, notes: $("pfNotes").value});
+      })});
+    }, true);
+    toast("Your changes are saved.");
+    openPerson(pid);
+    return;
+  }
+  var id = "p-" + Date.now();
+  var bday = $("pfBirthday").value;
+  var parts = bday ? bday.split("-").map(Number) : null;
+  var occasions = [];
+  if (parts && parts.length === 3){
+    occasions = [{id: "o-" + Date.now(), kind: "birthday", label: "Birthday", month: parts[1] || 1, day: parts[2] || 1}];
+  }
+  var idx = state.people.length;
+  update(function(s){
+    return Object.assign({}, s, {people: s.people.concat([{
+      id: id, name: name, relationship: $("pfRel").value.trim() || "Friend",
+      category: CATEGORIES.indexOf(cat) >= 0 ? cat : "Other",
+      color: PALETTE[idx % PALETTE.length] || PALETTE[0],
+      occasions: occasions, sizes: $("pfSizes").value.trim(), favorites: $("pfFavorites").value.trim(),
+      hobbies: $("pfHobbies").value.trim(), notes: $("pfNotes").value
+    }])});
+  }, true);
+  openPerson(id);
+}
+
+/* ---------- person detail ---------- */
+function openPerson(id){
+  currentPersonId = id;
+  renderPerson();
+  showView("view-person");
+}
+function kv(k, v){
+  return '<div class="kv"><div class="k">' + esc(k) + '</div><div class="v">' + esc(v || "Not saved yet") + '</div></div>';
+}
+function renderPerson(){
+  var p = personById(currentPersonId);
+  if (!p){ showView("view-people"); return; }
+  $("pdAvatar").style.background = p.color;
+  $("pdAvatar").textContent = initials(p.name);
+  $("pdName").textContent = p.name;
+  $("pdMeta").textContent = (p.relationship || "") + (p.archived ? " · Archived" : "");
+  $("pdArchivedNote").classList.toggle("hidden", !p.archived);
+  if (p.archived) $("pdArchivedNote").textContent = p.name + " is archived, so they and their gifts stay out of your lists. Their gift history is kept.";
+  // occasions
+  var occHtml = "";
+  if (!p.occasions.length) occHtml = '<p class="muted">No dates saved yet.</p>';
+  p.occasions.forEach(function(o){
+    var d = nextOccurrence(o.month, o.day);
+    var n = daysAwayFrom(d);
+    occHtml += '<div class="giftrow" style="display:flex;justify-content:space-between;gap:10px;align-items:center;">' +
+      '<div><div class="gt">' + esc(o.label) + '</div><div class="gd">' + esc(fmtDateLong(d)) + '</div></div>' +
+      '<div style="text-align:right;flex:none;"><span class="pill">' + esc(daysLabel(n)) + '</span><br>' +
+      '<button class="iconbtn" data-occ-edit="' + esc(o.id) + '" type="button" style="margin-top:6px;">Edit</button> ' +
+      '<button class="iconbtn" data-occ-del="' + esc(o.id) + '" type="button" style="margin-top:6px;">Delete</button></div></div>';
+  });
+  $("pdOccasions").innerHTML = occHtml;
+  Array.prototype.forEach.call($("pdOccasions").querySelectorAll("[data-occ-del]"), function(b){
+    b.addEventListener("click", function(){
+      var oid = b.getAttribute("data-occ-del");
+      update(function(s){
+        return Object.assign({}, s, {people: s.people.map(function(x){
+          return x.id === p.id ? Object.assign({}, x, {occasions: x.occasions.filter(function(o){ return o.id !== oid; })}) : x;
+        })});
+      }, true);
+      renderPerson();
+    });
+  });
+  Array.prototype.forEach.call($("pdOccasions").querySelectorAll("[data-occ-edit]"), function(b){
+    b.addEventListener("click", function(){
+      var o = null;
+      p.occasions.forEach(function(x){ if (x.id === b.getAttribute("data-occ-edit")) o = x; });
+      if (!o) return;
+      $("occLabel").value = o.label;
+      setKind(o.kind);
+      $("occDate").value = new Date().getFullYear() + "-" + String(o.month).padStart(2, "0") + "-" + String(o.day).padStart(2, "0");
+      $("occAddBtn").textContent = "Save occasion";
+      $("occAddBtn").setAttribute("data-editing", o.id);
+      $("occLabel").scrollIntoView({behavior: "smooth", block: "center"});
+    });
+  });
+  // holiday picker
+  var hol = '<option value="">Pick a holiday…</option>' + HOLIDAYS.map(function(h){
+    return '<option value="' + esc(h.label) + '">' + esc(h.label) + '</option>';
+  }).join("");
+  $("occHoliday").innerHTML = hol;
+  // details
+  $("pdDetails").innerHTML = kv("Sizes", p.sizes) + kv("Favorite things", p.favorites) +
+    kv("Hobbies and interests", p.hobbies) + (p.notes ? kv("Good to remember", p.notes) : "");
+  // gifts
+  var mine = state.gifts.filter(function(g){ return g.personId === p.id && !g.archived; });
+  var spent = mine.filter(function(g){ return g.status !== "thinking"; })
+                  .reduce(function(a, g){ return a + (Number(g.price) || 0); }, 0);
+  $("pdGiftsTitle").textContent = "Gifts for " + p.name.split(" ")[0];
+  $("pdSpent").textContent = money(spent) + " spent";
+  var archCount = state.gifts.filter(function(g){ return g.personId === p.id && g.archived; }).length;
+  var html = "";
+  if (!mine.length) html = '<p class="muted"><b>No gift ideas yet</b><br>Add an idea now and fill in the details once you buy it.</p>';
+  mine.forEach(function(g){ html += giftRowHtml(g, p); });
+  if (archCount > 0) html += '<p class="muted small">' + archCount + " archived gift" + (archCount === 1 ? " is" : "s are") + " kept in Archived.</p>";
+  $("pdGifts").innerHTML = html;
+  wireGiftRows($("pdGifts"), p);
+  $("pdArchiveText").textContent = "Archiving hides " + p.name + " from your lists and keeps their gifts. Deleting removes them for good.";
+  $("pdArchiveBtn").textContent = p.archived ? "Restore to my list" : "Archive this person";
+}
+function setKind(k){
+  var sel = $("occKind");
+  for (var i = 0; i < sel.options.length; i++){ if (sel.options[i].value === k) { sel.selectedIndex = i; return; } }
+}
+function addOccasion(){
+  var p = personById(currentPersonId);
+  if (!p) return;
+  var label = $("occLabel").value.trim();
+  var dateStr = $("occDate").value;
+  var msg = $("occMsg"); hideMsg(msg);
+  if (!label || !dateStr){ showMsg(msg, "Add a name and a date for this occasion."); return; }
+  var parts = dateStr.split("-").map(Number);
+  var month = parts[1] || 1, day = parts[2] || 1;
+  var hol = null;
+  HOLIDAYS.forEach(function(h){ if (h.label === label) hol = h; });
+  var kind = hol ? "holiday" : ($("occKind").value || "custom");
+  var editing = $("occAddBtn").getAttribute("data-editing");
+  update(function(s){
+    return Object.assign({}, s, {people: s.people.map(function(x){
+      if (x.id !== p.id) return x;
+      var occ;
+      if (editing){
+        occ = x.occasions.map(function(o){
+          return o.id === editing ? Object.assign({}, o, {label: label, kind: kind, month: month, day: day}) : o;
+        });
+      } else {
+        occ = x.occasions.concat([{id: "o-" + Date.now(), kind: kind, label: label, month: month, day: day}]);
+      }
+      return Object.assign({}, x, {occasions: occ});
+    })});
+  }, true);
+  $("occLabel").value = ""; $("occDate").value = ""; $("occHoliday").selectedIndex = 0;
+  $("occAddBtn").textContent = "Save occasion";
+  $("occAddBtn").removeAttribute("data-editing");
+  toast("Occasion added.");
+  renderPerson();
+}
+function giftRowHtml(g, p){
+  var html = '<div class="giftrow"><div style="display:flex;gap:12px;">';
+  if (g.photo) html += '<img class="thumb" src="' + esc(g.photo) + '" alt="Photo of ' + esc(g.name) + '">';
+  html += '<div style="min-width:0;flex:1;"><div class="gt">' + esc(g.name) + '</div>' +
+    '<div class="gd">' + esc(g.occasionLabel || "Any occasion") + " · " + esc(money(g.price)) + '</div>' +
+    '<div class="gd">Hidden in: ' + esc(g.hidingPlace || "Not hidden yet") + '</div>';
+  if (g.carrier || g.trackingNumber){
+    html += '<div class="gd" style="margin-top:4px;">' + esc(g.carrier || "Carrier") + ' tracking: <b style="color:var(--ink);">' +
+      esc(g.trackingNumber || "No number yet") + '</b></div>';
+    var url = trackingUrl(g.carrier, g.trackingNumber);
+    if (g.trackingNumber && url) html += '<p style="margin:6px 0 0;"><a class="iconbtn" style="text-decoration:none;" target="_blank" rel="noopener noreferrer" href="' + esc(url) + '">Track package' + (g.carrier ? " with " + esc(g.carrier) : "") + '</a></p>';
+    if (g.trackingStatus) html += ' <span class="pill">' + esc(g.trackingStatus) + '</span>';
+  }
+  if (g.idea) html += '<div class="gd" style="margin-top:4px;">' + esc(g.idea) + '</div>';
+  html += '</div><span class="pill" style="flex:none;">' + esc(STATUS_LABELS[g.status] || g.status) + '</span></div>';
+  html += '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">';
+  ["thinking","purchased","wrapped","given"].forEach(function(st){
+    if (st !== g.status) html += '<button class="iconbtn" data-mark="' + st + '" data-gift="' + esc(g.id) + '" type="button">Mark ' + STATUS_LABELS[st].toLowerCase() + '</button>';
+  });
+  html += '<button class="iconbtn" data-edit-gift="' + esc(g.id) + '" type="button">Edit gift</button>' +
+          '<button class="iconbtn" data-arch-gift="' + esc(g.id) + '" type="button">Archive gift</button>' +
+          '<button class="iconbtn" data-del-gift="' + esc(g.id) + '" type="button">Delete gift</button></div></div>';
+  return html;
+}
+function wireGiftRows(container, p){
+  Array.prototype.forEach.call(container.querySelectorAll("[data-mark]"), function(b){
+    b.addEventListener("click", function(){
+      var gid = b.getAttribute("data-gift"), st = b.getAttribute("data-mark");
+      update(function(s){
+        return Object.assign({}, s, {gifts: s.gifts.map(function(g){
+          return g.id === gid ? Object.assign({}, g, {status: st}) : g;
+        })});
+      }, true);
+      toast((STATUS_LABELS[st] || st) + " saved.");
+      renderPerson();
+    });
+  });
+  Array.prototype.forEach.call(container.querySelectorAll("[data-edit-gift]"), function(b){
+    b.addEventListener("click", function(){ openGiftForm(b.getAttribute("data-edit-gift")); });
+  });
+  Array.prototype.forEach.call(container.querySelectorAll("[data-arch-gift]"), function(b){
+    b.addEventListener("click", function(){
+      var g = giftById(b.getAttribute("data-arch-gift"));
+      update(function(s){
+        return Object.assign({}, s, {gifts: s.gifts.map(function(x){
+          return x.id === g.id ? Object.assign({}, x, {archived: true}) : x;
+        })});
+      }, true);
+      toast(g.name + " is in Archived. You can restore it there.");
+      renderPerson();
+    });
+  });
+  Array.prototype.forEach.call(container.querySelectorAll("[data-del-gift]"), function(b){
+    b.addEventListener("click", function(){
+      var g = giftById(b.getAttribute("data-del-gift"));
+      if (!window.confirm("\u201C" + g.name + "\u201D for " + p.name + " will be removed for good. Its photos and tracking number are deleted with it. To keep it without showing it, archive it instead.")) return;
+      update(function(s){
+        return Object.assign({}, s, {gifts: s.gifts.filter(function(x){ return x.id !== g.id; })});
+      }, true);
+      toast(g.name + " was deleted.");
+      renderPerson();
+    });
+  });
+}
+
+/* ---------- gift form ---------- */
+function fillOccasionSelect(personId, current){
+  var p = personById(personId);
+  var labels = p ? p.occasions.map(function(o){ return o.label; }) : [];
+  var html = "";
+  if (!labels.length) html += '<option value="">Any occasion</option>';
+  labels.forEach(function(l){ html += '<option value="' + esc(l) + '"' + (l === current ? " selected" : "") + '>' + esc(l) + '</option>'; });
+  html += '<optgroup label="Holidays">';
+  HOLIDAYS.forEach(function(h){
+    if (labels.indexOf(h.label) < 0) html += '<option value="' + esc(h.label) + '"' + (h.label === current ? " selected" : "") + '>' + esc(h.label) + '</option>';
+  });
+  html += '</optgroup>';
+  if (current && labels.indexOf(current) < 0 && !HOLIDAYS.some(function(h){ return h.label === current; })){
+    html = '<option value="' + esc(current) + '" selected>' + esc(current) + '</option>' + html;
+  }
+  $("gfOccasion").innerHTML = html;
+  if (current) $("gfOccasion").value = current;
+}
+function fillCarrierSelect(current){
+  var opts = CARRIERS.slice();
+  if (current && opts.indexOf(current) < 0) opts.splice(1, 0, current);
+  $("gfCarrier").innerHTML = opts.map(function(c){
+    return '<option value="' + esc(c) + '"' + (c === current ? " selected" : "") + '>' + (c === "" ? "Not being shipped" : esc(c)) + '</option>';
+  }).join("");
+}
+function openGiftForm(giftId, personId){
+  editingGiftId = giftId || null;
+  hideMsg($("gfMsg"));
+  var g = giftId ? giftById(giftId) : null;
+  var folks = state.people.filter(function(p){ return !p.archived; });
+  $("gfPerson").innerHTML = folks.map(function(p){
+    return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>';
+  }).join("");
+  var pid = g ? g.personId : (personId || (folks[0] && folks[0].id) || "");
+  if (pid) $("gfPerson").value = pid;
+  $("giftFormTitle").textContent = g ? "Edit gift" : "Add a gift";
+  $("gfName").value = g ? (g.name || "") : "";
+  fillOccasionSelect(pid, g ? (g.occasionLabel || "") : ((personById(pid) || {occasions: []}).occasions[0] || {}).label || "");
+  $("gfPrice").value = g ? String(g.price != null ? g.price : "") : "";
+  $("gfDate").value = g ? (g.boughtOn || "") : todayISO();
+  $("gfHiding").value = g ? (g.hidingPlace || "") : "";
+  buildSeg($("gfStatusSeg"), "data-status",
+    ["thinking","purchased","wrapped","given"].map(function(s){ return {value: s, label: STATUS_LABELS[s]}; }),
+    g ? g.status : "purchased");
+  wireSeg($("gfStatusSeg"), "data-status");
+  $("gfIdea").value = g ? (g.idea || "") : "";
+  giftPhotoData = g ? (g.photo != null ? g.photo : null) : null;
+  giftShipData = g ? (g.shippingPhoto != null ? g.shippingPhoto : null) : null;
+  refreshGiftPhotoPreviews();
+  fillCarrierSelect(g ? (g.carrier || "") : "");
+  $("gfTracking").value = g ? (g.trackingNumber || "") : "";
+  $("giftDeleteWrap").classList.toggle("hidden", !g);
+  showView("view-gift-form");
+}
+function refreshGiftPhotoPreviews(){
+  $("gfPhotoPrev").classList.toggle("hidden", !giftPhotoData);
+  if (giftPhotoData) $("gfPhotoPrev").src = giftPhotoData;
+  $("gfPhotoRemove").classList.toggle("hidden", !giftPhotoData);
+  $("gfShipPrev").classList.toggle("hidden", !giftShipData);
+  if (giftShipData) $("gfShipPrev").src = giftShipData;
+  $("gfShipRemove").classList.toggle("hidden", !giftShipData);
+}
+function readFileAsDataUrl(file, cb){
+  if (!file) return;
+  var r = new FileReader();
+  r.onload = function(){ cb(typeof r.result === "string" ? r.result : null); };
+  r.readAsDataURL(file);
+}
+function saveGift(){
+  var name = $("gfName").value.trim();
+  var pid = $("gfPerson").value;
+  var priceStr = $("gfPrice").value;
+  var msg = $("gfMsg"); hideMsg(msg);
+  if (!name){ showMsg(msg, "Give the gift a short name, like \u201Clavender soap\u201D."); return; }
+  if (!pid){ showMsg(msg, "Choose who this gift is for."); return; }
+  if (priceStr !== "" && isNaN(Number(priceStr))){ showMsg(msg, "The price should be a number, like 24.50."); return; }
+  var status = segVal($("gfStatusSeg"), "data-status") || "purchased";
+  var fields = {
+    personId: pid, name: name, idea: $("gfIdea").value.trim(),
+    price: Number(priceStr) || 0,
+    boughtOn: status === "thinking" ? "" : $("gfDate").value,
+    occasionLabel: $("gfOccasion").value || "Any occasion",
+    hidingPlace: $("gfHiding").value.trim() || "Not hidden yet",
+    status: status, photo: giftPhotoData, shippingPhoto: giftShipData,
+    carrier: $("gfCarrier").value, trackingNumber: $("gfTracking").value.trim()
+  };
+  if (editingGiftId){
+    var gid = editingGiftId;
+    update(function(s){
+      return Object.assign({}, s, {gifts: s.gifts.map(function(g){
+        return g.id === gid ? Object.assign({}, g, fields) : g;
+      })});
+    }, true);
+    toast("Gift updated.");
+  } else {
+    var gift = Object.assign({id: "g-" + Date.now(), trackingStatus: "", trackingUpdatedAt: ""}, fields);
+    update(function(s){
+      return Object.assign({}, s, {gifts: [gift].concat(s.gifts)});
+    }, true);
+    toast("Gift saved.");
+  }
+  openPerson(pid);
+}
+function deleteGiftFromForm(){
+  if (!editingGiftId) return;
+  var g = giftById(editingGiftId);
+  if (!g) return;
+  if (!window.confirm("Delete this gift for good?")) return;
+  var pid = g.personId;
+  update(function(s){
+    return Object.assign({}, s, {gifts: s.gifts.filter(function(x){ return x.id !== g.id; })});
+  }, true);
+  toast(g.name + " was deleted.");
+  openPerson(pid);
+}
+
+/* ---------- upcoming ---------- */
+function renderUpcoming(){
+  markRemindersSeen();
+  var all = upcomingList(state);
+  var win = all.filter(function(u){ return u.daysAway <= state.reminderDays; });
+  var show = upcomingShowAll ? all : (win.length ? win : all.slice(0, 3));
+  $("upcomingSub").textContent = "Reminders start " + state.reminderDays + " days ahead.";
+  var html = "";
+  if (!all.length){
+    html = '<div class="card center"><p style="font-weight:700;">No occasions yet</p>' +
+           '<p class="muted">Add a birthday or anniversary to a person and it will appear here.</p></div>';
+  } else {
+    html = "<h2>" + (upcomingShowAll ? "All occasions this year" : state.reminderDays + "-day reminder window") + "</h2>";
+    show.forEach(function(u){
+      var mon = u.date.toLocaleDateString("en-US", {month: "short"});
+      html += '<div class="rowline" data-up-person="' + esc(u.personId) + '">' +
+        '<div class="datebadge"><div class="m">' + esc(mon) + '</div><div class="d">' + u.date.getDate() + '</div></div>' +
+        '<div style="flex:1;min-width:0;"><div class="pname" style="font-size:1.1rem;">' + esc(u.personName) + '</div>' +
+        '<div class="pmeta">' + esc(u.label) + " · " + esc(fmtDateLong(u.date)) + '</div></div>' +
+        '<span class="pill ' + (u.daysAway <= 14 ? "" : "") + '">' + esc(daysLabel(u.daysAway)) + '</span></div>';
+    });
+  }
+  $("upcomingList").innerHTML = html;
+  Array.prototype.forEach.call($("upcomingList").querySelectorAll("[data-up-person]"), function(el){
+    el.addEventListener("click", function(){ openPerson(el.getAttribute("data-up-person")); });
+  });
+  var btn = $("upcomingToggleBtn");
+  if (!upcomingShowAll && win.length < all.length){ btn.classList.remove("hidden"); btn.textContent = "Show all " + all.length + " occasions"; }
+  else if (upcomingShowAll){ btn.classList.remove("hidden"); btn.textContent = "Show only the next few weeks"; }
+  else btn.classList.add("hidden");
+}
+
+/* ---------- notifications ---------- */
+function renderNotifications(){
+  $("ntOn").checked = !!state.notificationsOn;
+  setSeg($("ntBySeg"), "data-by", state.notifyBy);
+  $("ntEmailWrap").classList.toggle("hidden", state.notifyBy !== "email");
+  $("ntEmail").value = state.notifyEmail || "";
+  setSeg($("ntDaysSeg"), "data-days", String(state.reminderDays));
+  var win = upcomingList(state).filter(function(u){ return u.daysAway <= state.reminderDays && u.daysAway >= 0; });
+  var html = "";
+  if (state.notificationsOn && state.reminderDays > 0){
+    if (!win.length) html = '<p class="muted">Nothing in the next ' + state.reminderDays + " days. Alerts go out as dates get closer.</p>";
+    else win.forEach(function(u){
+      html += '<p style="margin:.3em 0;">' + esc(u.personName) + ": " + esc(u.label) + " — " + u.daysAway + " days from now</p>";
+    });
+  } else html = '<p class="muted">Reminders are off, so no alerts will be sent.</p>';
+  $("ntPreview").innerHTML = html;
+}
+function chooseNotifyBy(by){
+  if (by === "email"){
+    update(function(s){ return Object.assign({}, s, {notifyBy: "email"}); }, true);
+    renderNotifications();
+    return;
+  }
+  if (typeof Notification === "undefined"){ $("ntDenied").classList.remove("hidden"); return; }
+  if (Notification.permission === "granted"){
+    update(function(s){ return Object.assign({}, s, {notifyBy: "browser"}); }, true);
+    renderNotifications();
+  } else if (Notification.permission === "denied"){
+    $("ntDenied").classList.remove("hidden");
+  } else {
+    Notification.requestPermission().then(function(p){
+      if (p === "granted"){
+        update(function(s){ return Object.assign({}, s, {notifyBy: "browser"}); }, true);
+        toast("Browser alerts are allowed.");
+      } else $("ntDenied").classList.remove("hidden");
+      renderNotifications();
+    });
+  }
+}
+
+/* ---------- budget ---------- */
+function renderBudget(){
+  var spentGifts = state.gifts.filter(function(g){ return g.status !== "thinking" && !g.archived; });
+  var spent = spentGifts.reduce(function(a, g){ return a + (Number(g.price) || 0); }, 0);
+  var remaining = state.budget - spent;
+  var pct = Math.min(100, Math.round(spent / Math.max(state.budget, 1) * 100));
+  $("budgetSub").textContent = "Your spending for " + new Date().getFullYear() + ".";
+  var rem = $("budgetRemaining");
+  rem.textContent = money(Math.abs(remaining)) + (remaining < 0 ? " over" : "");
+  rem.style.color = remaining < 0 ? "var(--warn)" : "";
+  $("budgetBar").style.width = pct + "%";
+  $("budgetBar").style.background = remaining < 0 ? "var(--warn)" : "var(--green)";
+  $("budgetSpent").textContent = money(spent);
+  $("budgetTotal").textContent = money(state.budget);
+  // by person
+  var byPerson = state.people.filter(function(p){ return !p.archived; }).map(function(p){
+    return {person: p, total: spentGifts.filter(function(g){ return g.personId === p.id; })
+      .reduce(function(a, g){ return a + (Number(g.price) || 0); }, 0)};
+  }).sort(function(a, b){ return b.total - a.total; });
+  // by occasion
+  var occMap = {};
+  spentGifts.forEach(function(g){ occMap[g.occasionLabel] = (occMap[g.occasionLabel] || 0) + (Number(g.price) || 0); });
+  var byOcc = Object.keys(occMap).map(function(k){ return [k, occMap[k]]; }).sort(function(a, b){ return b[1] - a[1]; });
+  var maxX = Math.max(1, Math.max.apply(null, byPerson.map(function(x){ return x.total; }).concat(byOcc.map(function(x){ return x[1]; }))));
+  $("budgetByPerson").innerHTML = byPerson.map(function(x){
+    return '<p style="margin:.5em 0 0;"><span style="font-weight:700;">' + esc(x.person.name) + '</span>' +
+      '<span style="float:right;">' + esc(money(x.total)) + '</span></p>' +
+      '<div class="bar"><div style="width:' + (x.total / maxX * 100) + '%;background:' + esc(x.person.color) + ';"></div></div>';
+  }).join("") || '<p class="muted">Nothing bought yet.</p>';
+  if (!byOcc.length) $("budgetByOccasion").innerHTML = '<p class="muted">Nothing bought yet. Gifts you save as purchased will show up here.</p>';
+  else $("budgetByOccasion").innerHTML = byOcc.map(function(pair){
+    var limit = state.eventLimits[pair[0]];
+    var over = limit !== undefined && pair[1] > limit;
+    var w = limit ? Math.min(100, pair[1] / limit * 100) : pair[1] / maxX * 100;
+    return '<p style="margin:.5em 0 0;"><span style="font-weight:700;">' + esc(pair[0]) + '</span>' +
+      '<span style="float:right;">' + esc(money(pair[1])) + (limit !== undefined ? '<span class="muted"> of ' + esc(money(limit)) + '</span>' : '') + '</span></p>' +
+      '<div class="bar"><div style="width:' + w + '%;' + (over ? 'background:var(--warn);' : '') + '"></div></div>';
+  }).join("");
+  // limits editor — labels from people's occasions
+  var labels = Array.from(new Set(state.people.flatMap(function(p){ return p.occasions.map(function(o){ return o.label; }); })));
+  $("budgetLimits").innerHTML = labels.map(function(l){
+    return '<label for="limit-' + esc(l) + '">$ ' + esc(l) + '</label>' +
+      '<input id="limit-' + esc(l) + '" data-limit="' + esc(l) + '" type="text" inputmode="decimal" placeholder="No limit" value="' +
+      (state.eventLimits[l] !== undefined ? esc(state.eventLimits[l]) : '') + '">';
+  }).join("") || '<p class="muted small">No occasion labels yet — add a date to a person first.</p>';
+  Array.prototype.forEach.call($("budgetLimits").querySelectorAll("[data-limit]"), function(inp){
+    inp.addEventListener("change", function(){
+      var label = inp.getAttribute("data-limit");
+      var v = inp.value;
+      update(function(s){
+        var limits = Object.assign({}, s.eventLimits);
+        if (v === "" || isNaN(Number(v))) delete limits[label]; else limits[label] = Number(v);
+        return Object.assign({}, s, {eventLimits: limits});
+      }, true);
+    });
+  });
+}
+
+/* ---------- archived ---------- */
+function renderArchived(){
+  var archPeople = state.people.filter(function(p){ return p.archived; });
+  var archGifts = state.gifts.filter(function(g){
+    if (!g.archived) return false;
+    var p = personById(g.personId);
+    return !(p && p.archived);
+  });
+  $("archivedEmpty").classList.toggle("hidden", archPeople.length > 0 || archGifts.length > 0);
+  $("archivedPeopleTitle").classList.toggle("hidden", !archPeople.length);
+  $("archivedGiftsTitle").classList.toggle("hidden", !archGifts.length);
+  $("archivedPeople").innerHTML = archPeople.map(function(p){
+    var n = state.gifts.filter(function(g){ return g.personId === p.id; }).length;
+    return '<div class="giftrow" style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">' +
+      '<div><div class="gt">' + esc(p.name) + '</div><div class="gd">' + esc(p.relationship) + " · " + esc(p.category) + " · " + n + " gift" + (n === 1 ? "" : "s") + ' kept</div></div>' +
+      '<button class="btn" style="width:auto;" data-restore-person="' + esc(p.id) + '" type="button">Restore ' + esc(p.name.split(" ")[0]) + '</button></div>';
+  }).join("");
+  $("archivedGifts").innerHTML = archGifts.map(function(g){
+    var p = personById(g.personId);
+    return '<div class="giftrow" style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">' +
+      '<div style="display:flex;gap:10px;align-items:center;">' + (g.photo ? '<img class="thumb" style="width:52px;height:52px;" src="' + esc(g.photo) + '" alt="">' : '') +
+      '<div><div class="gt">' + esc(g.name) + '</div><div class="gd">' + esc(p ? p.name : "Unknown person") + " · " + esc(g.occasionLabel) + " · " + esc(money(g.price)) + " · " + esc(STATUS_LABELS[g.status] || g.status) + '</div></div></div>' +
+      '<button class="btn" style="width:auto;" data-restore-gift="' + esc(g.id) + '" type="button">Restore gift</button></div>';
+  }).join("");
+  Array.prototype.forEach.call($("archivedPeople").querySelectorAll("[data-restore-person]"), function(b){
+    b.addEventListener("click", function(){
+      var p = personById(b.getAttribute("data-restore-person"));
+      update(function(s){
+        return Object.assign({}, s, {people: s.people.map(function(x){
+          return x.id === p.id ? Object.assign({}, x, {archived: false}) : x;
+        })});
+      }, true);
+      toast(p.name + " is back on your list.");
+      renderArchived();
+    });
+  });
+  Array.prototype.forEach.call($("archivedGifts").querySelectorAll("[data-restore-gift]"), function(b){
+    b.addEventListener("click", function(){
+      var g = giftById(b.getAttribute("data-restore-gift"));
+      var p = personById(g.personId);
+      update(function(s){
+        return Object.assign({}, s, {gifts: s.gifts.map(function(x){
+          return x.id === g.id ? Object.assign({}, x, {archived: false}) : x;
+        })});
+      }, true);
+      toast(g.name + " is back with " + (p ? p.name + "'s" : "its") + " gifts.");
+      renderArchived();
+    });
+  });
+}
+
+/* ---------- calendar import (ported from the live import) ---------- */
+var KIND_TESTS = [
+  {kind: "birthday", test: /birthday|bday/i},
+  {kind: "anniversary", test: /anniversary|wedding/i},
+  {kind: "holiday", test: /christmas|thanksgiving|easter|hanukkah|new year|holiday/i}
+];
+function icsUnescape(e){
+  return e.replace(/\\n/gi, " ").replace(/\\,/g, ",").replace(/\\;/g, ";").replace(/\\\\/g, "\\").trim();
+}
+function parseIcsDate(e){
+  var t = /^(\d{4})(\d{2})(\d{2})/.exec(String(e || "").trim());
+  if (!t) return null;
+  var y = Number(t[1]), m = Number(t[2]), d = Number(t[3]);
+  if (!y || m < 1 || m > 12 || d < 1 || d > 31) return null;
+  return {month: m, day: d, year: y};
+}
+function parseIcs(text, calName, source){
+  var name = calName, events = [], inEvent = false, obj = {}, count = 0;
+  var lines = text.replace(/\r\n/g, "\n").replace(/\n[ \t]/g, "").split("\n");
+  lines.forEach(function(line){
+    var idx = line.indexOf(":");
+    if (idx === -1) return;
+    var key = line.slice(0, idx).split(";")[0].toUpperCase();
+    var val = line.slice(idx + 1);
+    if (key === "X-WR-CALNAME" && !inEvent && events.length === 0){ var nm = icsUnescape(val); if (nm) name = nm; return; }
+    if (key === "BEGIN" && val.trim().toUpperCase() === "VEVENT"){ inEvent = true; obj = {}; return; }
+    if (key === "END" && val.trim().toUpperCase() === "VEVENT"){
+      inEvent = false;
+      var summary = icsUnescape(obj.SUMMARY || ""), start = obj.DTSTART || "";
+      if (summary && start){
+        count += 1;
+        events.push({uid: name + "-" + (obj.UID || count) + "-" + count, summary: summary, start: start,
+                     location: icsUnescape(obj.LOCATION || ""), calendarName: name, source: source});
+      }
+      obj = {}; return;
+    }
+    if (inEvent && !(key in obj)) obj[key] = val;
+  });
+  return events;
+}
+async function inflateRaw(bytes){
+  var stream = new Blob([bytes.slice()]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+async function unzipIcs(bytes){
+  var view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  var eocd = -1;
+  for (var r = bytes.length - 22; r >= Math.max(0, bytes.length - 65557); --r){
+    if (view.getUint32(r, true) === 101010256){ eocd = r; break; }
+  }
+  if (eocd === -1) throw new Error("not a zip");
+  var total = view.getUint16(eocd + 10, true);
+  var off = view.getUint32(eocd + 16, true);
+  var out = [];
+  for (var n = 0; n < total; n++){
+    if (view.getUint32(off, true) !== 33639248) throw new Error("bad zip");
+    var method = view.getUint16(off + 10, true);
+    var compSize = view.getUint32(off + 20, true);
+    var nameLen = view.getUint16(off + 28, true);
+    var extraLen = view.getUint16(off + 30, true);
+    var commentLen = view.getUint16(off + 32, true);
+    var localOff = view.getUint32(off + 42, true);
+    var fname = new TextDecoder("utf-8").decode(bytes.subarray(off + 46, off + 46 + nameLen));
+    off += 46 + nameLen + extraLen + commentLen;
+    if (!fname.toLowerCase().endsWith(".ics")) continue;
+    var lfName = view.getUint16(localOff + 26, true);
+    var lfExtra = view.getUint16(localOff + 28, true);
+    var start = localOff + 30 + lfName + lfExtra;
+    var data = bytes.subarray(start, start + compSize);
+    if (method === 0) out.push({name: fname, data: data});
+    else if (method === 8) out.push({name: fname, data: await inflateRaw(data)});
+  }
+  return out;
+}
+function firstNameOf(name){ return (String(name || "").split(/\s*(?:\band\b|&|,|\+)\s*/i).map(function(s){ return s.trim(); }).filter(Boolean)[0]) || ""; }
+function occasionLabelFor(title, personName){
+  var first = (personName.split(" ")[0]) || "";
+  var r = title.replace(new RegExp("^" + first.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "'s\\s+", "i"), "")
+               .replace(/^Mom & Dad anniversary$/i, "Wedding anniversary")
+               .replace(new RegExp("\\s+with " + first.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$", "i"), "");
+  return r.charAt(0).toUpperCase() + r.slice(1);
+}
+async function readCalendarFile(file){
+  var buf = new Uint8Array(await file.arrayBuffer());
+  var files = [];
+  if (file.name.toLowerCase().endsWith(".zip")){
+    var entries = await unzipIcs(buf);
+    entries.forEach(function(e){ files.push({name: e.name, text: new TextDecoder("utf-8").decode(e.data)}); });
+  } else {
+    files.push({name: file.name, text: new TextDecoder("utf-8").decode(buf)});
+  }
+  var raw = [];
+  files.forEach(function(f){
+    var src = /google/i.test(f.text.slice(0, 2000)) ? "google" : "apple";
+    raw = raw.concat(parseIcs(f.text, f.name.replace(/\.ics$/i, ""), src));
+  });
+  if (!raw.length) throw new Error("no events");
+  var events = [], skipped = 0;
+  raw.forEach(function(ev){
+    var kindTest = null;
+    KIND_TESTS.forEach(function(k){ if (k.test.test(ev.summary)) kindTest = k; });
+    var dt = parseIcsDate(ev.start);
+    if (!kindTest || !dt){ skipped += 1; return; }
+    var hol = null;
+    HOLIDAYS.forEach(function(h){ if (h.label.toLowerCase() === ev.summary.toLowerCase()) hol = h; });
+    var label = kindTest.kind === "holiday" ? (hol ? hol.label : ev.summary) : extractPersonName(ev.summary);
+    if (!label){ skipped += 1; return; }
+    var personName = kindTest.kind === "holiday" ? label : firstNameOf(label);
+    events.push({id: "ics-" + ev.uid, source: ev.source, calendarName: ev.calendarName, title: ev.summary,
+                 month: dt.month, day: dt.day, year: dt.year, location: ev.location, personName: personName,
+                 kind: kindTest.kind, checked: true});
+  });
+  return {events: events, skipped: skipped};
+}
+function findImportPerson(people, personName){
+  var norm = function(e){ return e.trim().toLowerCase().replace(/\s+/g, " "); };
+  var n = norm(personName);
+  var found = null;
+  people.forEach(function(p){ if (norm(p.name) === n) found = p; });
+  if (found) return found;
+  people.forEach(function(p){ if (norm(p.name).split(" ")[0] === n.split(" ")[0]) found = p; });
+  return found;
+}
+function renderImportReview(){
+  var wrap = $("impReview");
+  if (!importEvents.length){ wrap.innerHTML = ""; $("impSaveWrap").classList.add("hidden"); return; }
+  var html = "<h3>Check these before saving</h3><p class='muted small'>Each date files under the person named in its title. Fix a name if one looks wrong, and untick anything you don't want.</p>";
+  importEvents.forEach(function(ev, i){
+    var dstr = new Date(2000, ev.month - 1, ev.day).toLocaleDateString("en-US", {month: "long", day: "numeric"});
+    html += '<div class="checkline"><input type="checkbox" data-imp-check="' + i + '"' + (ev.checked ? " checked" : "") + '>' +
+      '<div style="flex:1;"><b>' + esc(ev.title) + '</b><div class="gd muted small">' + esc(ev.kind) + " · " + esc(dstr) + " · from " + esc(ev.calendarName) + '</div>' +
+      '<label style="margin:6px 0 2px;">Files under</label><input type="text" data-imp-person="' + i + '" value="' + esc(ev.personName) + '"></div></div>';
+  });
+  wrap.innerHTML = html;
+  $("impSaveWrap").classList.remove("hidden");
+  Array.prototype.forEach.call(wrap.querySelectorAll("[data-imp-check]"), function(c){
+    c.addEventListener("change", function(){ importEvents[Number(c.getAttribute("data-imp-check"))].checked = c.checked; });
+  });
+  Array.prototype.forEach.call(wrap.querySelectorAll("[data-imp-person]"), function(inp){
+    inp.addEventListener("change", function(){ importEvents[Number(inp.getAttribute("data-imp-person"))].personName = inp.value; });
+  });
+}
+function saveImport(){
+  var chosen = importEvents.filter(function(e){ return e.checked; });
+  if (!chosen.length){ showMsg($("impMsg"), "Tick at least one date to save."); return; }
+  var added = 0;
+  update(function(s){
+    var next = repairState(normState(JSON.parse(JSON.stringify(s))));
+    var people = next.people;
+    chosen.forEach(function(ev){
+      var personName = dedupeName((ev.personName || "").trim());
+      if (!personName) return;
+      var label = occasionLabelFor(ev.title, personName);
+      var kind = KIND_TESTS.reduce(function(acc, k){ return k.test.test(ev.title) ? k.kind : acc; }, "custom");
+      var person = findImportPerson(people, personName);
+      if (!person){
+        person = {id: newId("p-import"), name: personName, relationship: "From calendar", category: "Other",
+                  color: PALETTE[people.length % PALETTE.length] || "#0f766e", occasions: [],
+                  sizes: "", favorites: "", hobbies: "", notes: "From your calendar dates", archived: false};
+        people.push(person);
+      }
+      var dup = person.occasions.some(function(o){
+        return o.month === ev.month && o.day === ev.day && (o.title === ev.title || o.label === label);
+      });
+      if (dup) return;
+      person.occasions.push({id: newId("o"), kind: kind, label: label, title: ev.title, month: ev.month, day: ev.day});
+      added += 1;
+    });
+    return repairState(Object.assign({}, next, {people: people}));
+  }, true);
+  importEvents = [];
+  renderImportReview();
+  $("impFile").value = "";
+  showMsg($("impMsg"), added ? "Saved " + added + " date" + (added === 1 ? "" : "s") + " to your list." : "Those dates were already on your list — nothing new to add.", true);
+  toast("Calendar dates saved.");
+}
+
+/* ---------- feedback (exactly the live flow) ---------- */
+async function sendFeedback(){
+  var message = $("fbMessage").value.trim();
+  var sender = $("fbEmail").value.trim();
+  var msg = $("fbMsg"); hideMsg(msg);
+  if (message.length < 3){ showMsg(msg, "Type a sentence or two about what you'd like to say."); return; }
+  if (sender && !validEmail(sender)){ showMsg(msg, "That email doesn't look right. Leave it blank if you'd rather not give one."); return; }
+  var btn = $("fbSendBtn"); btn.disabled = true; btn.textContent = "Sending…";
+  var res = await sb.from("feedback").insert({
+    message: message, sender_email: sender || null,
+    user_email: user && user.email ? user.email.toLowerCase() : null
+  }).select("id").single();
+  if (res.error || !res.data){
+    btn.disabled = false; btn.textContent = "Send feedback";
+    console.error("Feedback didn't save", res.error);
+    showMsg(msg, "Your message didn't save. Try again in a moment.");
+    return;
+  }
+  var inv = await sb.functions.invoke("send-feedback", {body: {
+    message: message, from: sender, fromUser: user ? (user.email || "") : "", page: window.location.origin
+  }});
+  btn.disabled = false; btn.textContent = "Send feedback";
+  if (inv.error){
+    console.error("Feedback saved but the email didn't send", inv.error);
+    toast("Your message is saved. Marybeth will see it in Gift Keeper. (The email copy didn't go out.)");
+  } else {
+    toast("Thanks — Marybeth has your message.");
+  }
+  $("fbMessage").value = "";
+  showView("view-people");
+}
+
+/* ---------- settings ---------- */
+function renderSettings(){
+  $("setEmail").textContent = user && user.email ? user.email : "—";
+  var on = lockOnLocal();
+  $("lockOffWrap").classList.toggle("hidden", on);
+  $("lockOnWrap").classList.toggle("hidden", !on);
+  $("lockToggle").checked = on;
+  $("lockSetup").classList.add("hidden");
+  $("adminNavBtn").classList.toggle("hidden", !isOwner());
+}
+
+/* ---------- backup (ported from the live admin chunk) ---------- */
+function exportBackup(){
+  var blob = new Blob([JSON.stringify(Object.assign({version: 1}, stripPin(state)), null, 2)], {type: "application/json"});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = "gift-keeper-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function importBackup(file){
+  if (!file) return;
+  var r = new FileReader();
+  r.onload = function(){
+    try {
+      var e = JSON.parse(String(r.result));
+      if (!Array.isArray(e.people) || !Array.isArray(e.gifts)){
+        showMsg($("backupMsg"), "That file doesn't look like a Gift Keeper backup.");
+        return;
+      }
+      hideMsg($("backupMsg"));
+      update(function(s){
+        return Object.assign({}, s, {
+          budget: typeof e.budget === "number" ? e.budget : s.budget,
+          people: e.people != null ? e.people : s.people,
+          gifts: e.gifts != null ? e.gifts : s.gifts,
+          eventLimits: e.eventLimits != null ? e.eventLimits : s.eventLimits
+        });
+      }, true);
+      state = fullNormalize(state);
+      persistLocal(); pushCloud();
+      toast("Your gift list was restored on this device.");
+      showView("view-people");
+    } catch (err){
+      showMsg($("backupMsg"), "That file couldn't be read.");
+    }
+  };
+  r.readAsText(file);
+}
+
+/* ---------- admin (owner only, live behavior) ---------- */
+var adminRequests = [], adminApproved = [], adminBusyId = null;
+async function loadAdmin(){
+  var rs = await Promise.all([
+    sb.from("access_requests").select("id, email, status, requested_at").order("requested_at", {ascending: false}),
+    sb.from("approved_emails").select("email, is_owner, approved_at").order("is_owner", {ascending: false})
+  ]);
+  adminRequests = rs[0].data || [];
+  adminApproved = rs[1].data || [];
+}
+function renderAdmin(){
+  if (!isOwner()){ showView("view-people"); return; }
+  $("adminSub").textContent = "Signed in as " + (user.email || "") + ". Approve the people who may use Gift Keeper.";
+  loadAdmin().then(function(){
+    var pending = adminRequests.filter(function(r){ return r.status === "pending"; });
+    var decided = adminRequests.filter(function(r){ return r.status !== "pending"; });
+    $("adminPendingTitle").textContent = "Waiting for you" + (pending.length ? " (" + pending.length + ")" : "");
+    $("adminPending").innerHTML = pending.length ? pending.map(function(r){
+      var when = new Date(r.requested_at).toLocaleDateString("en-US", {month: "short", day: "numeric"});
+      return '<div class="giftrow" style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">' +
+        '<div><div class="gt" style="word-break:break-all;">' + esc(r.email) + '</div><div class="gd">Asked ' + esc(when) + '</div></div>' +
+        '<div style="display:flex;gap:8px;"><button class="btn" style="width:auto;" data-approve="' + esc(r.id) + '" type="button">Approve</button>' +
+        '<button class="btn secondary" style="width:auto;" data-reject="' + esc(r.id) + '" type="button">Reject</button></div></div>';
+    }).join("") : '<p class="muted">No new requests right now.</p>';
+    $("adminApproved").innerHTML = adminApproved.map(function(a){
+      return '<div class="giftrow" style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">' +
+        '<div style="word-break:break-all;">' + esc(a.email) + (a.is_owner ? ' <span class="pill">You</span>' : '') + '</div>' +
+        (a.is_owner ? "" : '<button class="btn danger" style="width:auto;" data-remove-access="' + esc(a.email) + '" type="button">Remove access</button>') + '</div>';
+    }).join("") || '<p class="muted">Nobody approved yet.</p>';
+    $("adminDecidedCard").style.display = decided.length ? "" : "none";
+    $("adminDecided").innerHTML = decided.map(function(r){
+      return '<p style="margin:.3em 0;word-break:break-all;">' + esc(r.email) +
+        '<span class="muted" style="float:right;">' + (r.status === "approved" ? "Approved" : "Turned down") + '</span></p>';
+    }).join("");
+    Array.prototype.forEach.call($("adminPending").querySelectorAll("[data-approve]"), function(b){
+      b.addEventListener("click", function(){ decideRequest(b.getAttribute("data-approve"), "approved"); });
+    });
+    Array.prototype.forEach.call($("adminPending").querySelectorAll("[data-reject]"), function(b){
+      b.addEventListener("click", function(){ decideRequest(b.getAttribute("data-reject"), "rejected"); });
+    });
+    Array.prototype.forEach.call($("adminApproved").querySelectorAll("[data-remove-access]"), function(b){
+      b.addEventListener("click", function(){ removeAccess(b.getAttribute("data-remove-access")); });
+    });
+  });
+}
+async function decideRequest(id, decision){
+  var req = null;
+  adminRequests.forEach(function(r){ if (r.id === id) req = r; });
+  if (!req || adminBusyId) return;
+  adminBusyId = id;
+  var rpcName = decision === "approved" ? "approve_access_request" : "reject_access_request";
+  var res = await sb.rpc(rpcName, {request_id: req.id});
+  if (res.error){
+    adminBusyId = null;
+    console.error(decision === "approved" ? "Approval failed" : "Rejection failed", res.error);
+    toast(decision === "approved" ? "Couldn't approve " + req.email + ". Nothing was changed. Try again."
+                                   : "Couldn't turn down " + req.email + ". Nothing was changed. Try again.");
+    return;
+  }
+  var check = await sb.from("approved_emails").select("email").eq("email", req.email.toLowerCase()).maybeSingle();
+  adminBusyId = null;
+  if (decision === "approved" && !check.data){
+    toast(req.email + " was approved but isn't on the approved list. Try approving again.");
+    renderAdmin();
+    return;
+  }
+  toast(decision === "approved" ? req.email + " can now sign in." : req.email + " was turned down.");
+  if (decision === "approved"){
+    var inv = await sb.functions.invoke("notify-access-request", {body: {email: req.email.toLowerCase(), kind: "approved"}});
+    if (inv.error || !(inv.data && inv.data.sent === true)){
+      toast("Couldn't email " + req.email + " the \u201Cyou're in\u201D note. Tell them yourself this time.");
+    }
+  }
+  renderAdmin();
+}
+async function removeAccess(email){
+  var res = await sb.from("approved_emails").delete().eq("email", email);
+  if (res.error){ toast("That change didn't save. Try again."); return; }
+  toast(email + " can no longer sign in.");
+  renderAdmin();
+}
+
+/* ---------- cloud sync on sign-in (ported from the live provider) ----------
+   merged = repair(merge(normalize(cloud), normalize(local)))
+   The cloud blob is the base; the local blob folds in. Then the
+   merged list is saved locally and pushed back up.            */
+async function syncOnSignIn(){
+  var local = loadLocal();
+  var cloudData = null;
+  try {
+    var res = await sb.from("gift_lists").select("data").eq("user_id", user.id).maybeSingle();
+    if (res && res.data && res.data.data) cloudData = res.data.data;
+  } catch (e){ console.error("Couldn't read the account list", e); }
+  var merged;
+  if (cloudData){
+    merged = repairState(mergeStates(fullNormalize(cloudData), fullNormalize(local)));
+  } else {
+    merged = fullNormalize(local);
+  }
+  merged.pin = localPin();
+  merged.lockOn = lockOnLocal();
+  state = merged;
+  persistLocal();
+  cloudReady = true;
+  pushCloud();
+}
+function maybeLock(){
+  if (state.lockOn === true && state.pin && !lockArmedThisLoad){
+    lockArmedThisLoad = true;
+    showScreen("lockScreen");
+    return true;
+  }
+  return false;
+}
+async function enterApp(){
+  $("whoLine").textContent = user && user.email ? user.email : "";
+  $("setEmail").textContent = user && user.email ? user.email : "—";
+  $("adminNavBtn").classList.toggle("hidden", !isOwner());
+  await syncOnSignIn();
+  if (maybeLock()) return;
+  showScreen("appScreen");
+  showView("view-people");
+}
+
+/* ---------- approval gate (live RPC sequencing) ---------- */
+async function checkApproved(){
+  try {
+    var r = await sb.rpc("current_email_is_approved");
+    return r && r.data === true && !r.error;
+  } catch (e){ return false; }
+}
+async function gateAndEnter(){
+  showScreen("gateScreen");
+  $("gateText").textContent = "Checking your access…";
+  $("gateRequestBtn").classList.add("hidden");
+  var approved = await checkApproved();
+  if (!approved){
+    $("gateText").textContent = "This email isn't on the approved list yet. Marybeth lets everyone in by hand — ask for access and she'll take care of it, usually the same day.";
+    $("gateRequestBtn").classList.remove("hidden");
+    return;
+  }
+  var needsPw = false;
+  try {
+    var arr = await sb.from("access_requests").select("id").eq("email", user.email.toLowerCase()).eq("status", "approved").limit(1);
+    var hasApprovedReq = ((arr && arr.data) || []).length > 0;
+    var hp = await sb.rpc("current_email_has_password");
+    needsPw = (!hp || hp.data !== true) && hasApprovedReq;
+  } catch (e){ needsPw = false; }
+  var recovery = new URLSearchParams(window.location.search).get("type") === "recovery" ||
+                 (window.location.hash || "").indexOf("type=recovery") >= 0;
+  if (needsPw || recovery){
+    $("setPwIntro").textContent = "You're approved. Set a password for " + user.email + " and use it to sign in from now on.";
+    showScreen("setPwScreen");
+    return;
+  }
+  await enterApp();
+}
+
+/* ---------- auth actions ---------- */
+function signIn(){
+  var email = $("siEmail").value.trim(), pass = $("siPass").value;
+  var msg = $("siMsg"); hideMsg(msg);
+  if (!validEmail(email)){ showMsg(msg, "Type a full email address, like name@example.com."); return; }
+  if (!pass){ showMsg(msg, "Type your password."); return; }
+  var btn = $("signInBtn"); btn.disabled = true; btn.textContent = "Signing in…";
+  sb.auth.signInWithPassword({email: email, password: pass}).then(function(r){
+    btn.disabled = false; btn.textContent = "Sign in";
+    if (r.error){ showMsg(msg, friendlyErr(r.error)); return; }
+    user = r.data.user;
+    gateAndEnter();
+  }).catch(function(e){ btn.disabled = false; btn.textContent = "Sign in"; showMsg(msg, friendlyErr(e)); });
+}
+function forgotPassword(){
+  var email = $("siEmail").value.trim();
+  var msg = $("siMsg"); hideMsg(msg);
+  if (!validEmail(email)){ showMsg(msg, "Type your email first, then choose Forgot password."); return; }
+  sb.auth.resetPasswordForEmail(email, {redirectTo: window.location.origin + window.location.pathname}).then(function(r){
+    if (r.error){ showMsg(msg, friendlyErr(r.error)); return; }
+    showMsg(msg, "A sign-in link is on its way to " + email + ". Open it to set a new password.", true);
+  }).catch(function(e){ showMsg(msg, friendlyErr(e)); });
+}
+function createPassword(){
+  var email = $("nuEmail").value.trim(), p1 = $("nuPass").value, p2 = $("nuPass2").value;
+  var msg = $("nuMsg"); hideMsg(msg);
+  if (!validEmail(email)){ showMsg(msg, "Type a full email address, like name@example.com."); return; }
+  if (p1.length < 8){ showMsg(msg, "Use at least 8 characters."); return; }
+  if (p1 !== p2){ showMsg(msg, "The two passwords don't match."); return; }
+  var btn = $("createBtn"); btn.disabled = true; btn.textContent = "Creating…";
+  sb.auth.signUp({email: email, password: p1}).then(async function(r){
+    btn.disabled = false; btn.textContent = "Create my password";
+    if (r.error){ showMsg(msg, friendlyErr(r.error)); return; }
+    if (r.data && r.data.session && r.data.user){
+      user = r.data.user;
+      var approved = await checkApproved();
+      if (approved){
+        try { await sb.rpc("mark_password_set"); } catch (e){}
+        await enterApp();
+      } else {
+        gateAndEnter();
+      }
+    } else {
+      showMsg(msg, "Your password is set! We just sent a confirmation email to " + email + " — tap the link in it, then come back and Sign in with the password you just created.", true);
+      switchAuthTab("signin");
+      $("siEmail").value = email;
+    }
+  }).catch(function(e){ btn.disabled = false; btn.textContent = "Create my password"; showMsg(msg, friendlyErr(e)); });
+}
+async function saveChosenPassword(){
+  var p1 = $("pwNew").value, p2 = $("pwNew2").value;
+  var msg = $("pwMsg"); hideMsg(msg);
+  if (p1.length < 8){ showMsg(msg, "Use at least 8 characters."); return; }
+  if (p1 !== p2){ showMsg(msg, "The two passwords don't match."); return; }
+  var btn = $("pwSaveBtn"); btn.disabled = true; btn.textContent = "Saving…";
+  var res = await sb.auth.updateUser({password: p1});
+  try { await sb.rpc("mark_password_set"); } catch (e){}
+  btn.disabled = false; btn.textContent = "Save my password";
+  if (res.error){
+    if (/password/i.test(res.error.message) && /different|recovery|link/i.test(res.error.message)){
+      toast("That link was already used — sign in with your password.");
+      signOut();
+      return;
+    }
+    showMsg(msg, res.error.message);
+    return;
+  }
+  await enterApp();
+}
+async function doRequestAccess(email, msgEl){
+  hideMsg(msgEl);
+  if (!validEmail(email)){ showMsg(msgEl, "Type a full email address, like name@example.com."); return; }
+  email = email.trim();
+  var approved = await checkApproved();
+  if (approved){
+    showMsg(msgEl, "You're already approved — sign in, or use \u201CI'm new here\u201D to create your password.", true);
+    return;
+  }
+  var res = await sb.rpc("request_access", {requested: email});
+  if (res.error){ showMsg(msgEl, "The request didn't go through. Try again in a moment."); return; }
+  var sent = true;
+  try {
+    var inv = await sb.functions.invoke("notify-access-request", {body: {email: email}});
+    if (inv.error || !(inv.data && inv.data.sent === true)) sent = false;
+  } catch (e){ sent = false; }
+  if (!sent){
+    console.error("The access notification to the owner did not send.");
+    showMsg(msgEl, "Your request was saved, but the note to Marybeth didn't send. She'll still see your request when she checks.", true);
+  } else {
+    showMsg(msgEl, "Your request is in! Marybeth lets everyone in by hand, usually the same day. Watch your email.", true);
+  }
+}
+function signOut(){
+  sb.auth.signOut().then(function(){
+    user = null; cloudReady = false; lockArmedThisLoad = false;
+    showScreen("frontScreen");
+  });
+}
+
+/* ---------- legal pages (work signed-in and signed-out) ---------- */
+var legalFrom = "front";
+function openLegal(which){
+  if (user){
+    showView(which);
+  } else {
+    legalFrom = $("authScreen").classList.contains("hidden") ? "front" : "auth";
+    showScreen("appScreen");
+    document.querySelector("header.top").style.display = "none";
+    VIEWS.forEach(function(v){ $(v).classList.toggle("hidden", v !== which); });
+    window.scrollTo(0, 0);
+  }
+}
+function closeLegal(){
+  if (user){ showView(lastListView); return; }
+  document.querySelector("header.top").style.display = "";
+  showScreen(legalFrom === "auth" ? "authScreen" : "frontScreen");
+}
+
+/* ---------- auth tabs ---------- */
+function switchAuthTab(which){
+  $("tabSignIn").classList.toggle("on", which === "signin");
+  $("tabNew").classList.toggle("on", which === "new");
+  $("tabRequest").classList.toggle("on", which === "request");
+  $("signInPane").classList.toggle("hidden", which !== "signin");
+  $("newPane").classList.toggle("hidden", which !== "new");
+  $("requestPane").classList.toggle("hidden", which !== "request");
+}
+
+/* ---------- wire up ---------- */
+function init(){
+  if (!window.supabase){
+    document.body.innerHTML = '<div class="wrap"><div class="card"><h1>Gift Keeper couldn\'t load</h1><p>Check your internet connection and refresh the page.</p></div></div>';
+    return;
+  }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  state = loadLocal();
+  // front door
+  $("frontSignInBtn").addEventListener("click", function(){ showScreen("authScreen"); switchAuthTab("signin"); });
+  $("frontRequestBtn").addEventListener("click", function(){ showScreen("authScreen"); switchAuthTab("request"); });
+  $("frontPrivacyBtn").addEventListener("click", function(){ openLegal("view-privacy"); });
+  $("frontTermsBtn").addEventListener("click", function(){ openLegal("view-terms"); });
+  $("authPrivacyBtn").addEventListener("click", function(){ openLegal("view-privacy"); });
+  $("authTermsBtn").addEventListener("click", function(){ openLegal("view-terms"); });
+  $("authBackBtn").addEventListener("click", function(){ showScreen("frontScreen"); });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-legalback]"), function(b){
+    b.addEventListener("click", closeLegal);
+  });
+  // auth
+  $("tabSignIn").addEventListener("click", function(){ switchAuthTab("signin"); });
+  $("tabNew").addEventListener("click", function(){ switchAuthTab("new"); });
+  $("tabRequest").addEventListener("click", function(){ switchAuthTab("request"); });
+  $("signInBtn").addEventListener("click", signIn);
+  $("siPass").addEventListener("keydown", function(e){ if (e.key === "Enter") signIn(); });
+  $("forgotBtn").addEventListener("click", forgotPassword);
+  $("createBtn").addEventListener("click", createPassword);
+  $("nuPass2").addEventListener("keydown", function(e){ if (e.key === "Enter") createPassword(); });
+  $("requestBtn").addEventListener("click", function(){ doRequestAccess($("rqEmail").value, $("rqMsg")); });
+  $("pwSaveBtn").addEventListener("click", saveChosenPassword);
+  $("pwSignOutBtn").addEventListener("click", signOut);
+  $("gateSignOutBtn").addEventListener("click", signOut);
+  $("gateRequestBtn").addEventListener("click", function(){
+    doRequestAccess(user && user.email ? user.email : "", $("gateMsg"));
+  });
+  // app nav
+  Array.prototype.forEach.call(document.querySelectorAll("[data-nav]"), function(b){
+    b.addEventListener("click", function(){ showView(b.getAttribute("data-nav")); });
+  });
+  $("signOutBtn").addEventListener("click", signOut);
+  $("setSignOutBtn").addEventListener("click", signOut);
+  $("bellBtn").addEventListener("click", function(){ showView("view-upcoming"); });
+  // people
+  $("addPersonBtn").addEventListener("click", function(){ openPersonForm(null); });
+  $("personFormBack").addEventListener("click", function(){
+    if (editingPersonId) openPerson(editingPersonId); else showView("view-people");
+  });
+  $("personSaveBtn").addEventListener("click", savePerson);
+  $("mergeBtn").addEventListener("click", doMergePeople);
+  // person detail
+  $("pdEditBtn").addEventListener("click", function(){ openPersonForm(currentPersonId); });
+  $("pdAddGiftBtn").addEventListener("click", function(){ openGiftForm(null, currentPersonId); });
+  $("occAddBtn").addEventListener("click", addOccasion);
+  $("occHoliday").addEventListener("change", function(){
+    var h = null;
+    HOLIDAYS.forEach(function(x){ if (x.label === $("occHoliday").value) h = x; });
+    if (h){
+      $("occLabel").value = h.label;
+      setKind("holiday");
+      $("occDate").value = new Date().getFullYear() + "-" + String(h.month).padStart(2, "0") + "-" + String(h.day).padStart(2, "0");
+    }
+  });
+  $("pdArchiveBtn").addEventListener("click", function(){
+    var p = personById(currentPersonId);
+    if (!p) return;
+    var target = !p.archived;
+    update(function(s){
+      return Object.assign({}, s, {people: s.people.map(function(x){
+        return x.id === p.id ? Object.assign({}, x, {archived: target}) : x;
+      })});
+    }, true);
+    toast(target ? p.name + " is in Archived. Their gifts are kept." : p.name + " is back on your list.");
+    renderPerson();
+  });
+  $("pdDeleteBtn").addEventListener("click", function(){
+    var p = personById(currentPersonId);
+    if (!p) return;
+    var n = state.gifts.filter(function(g){ return g.personId === p.id; }).length;
+    if (!window.confirm("Delete " + p.name + " for good? " + (n ? "This also deletes " + n + " gift" + (n === 1 ? "" : "s") + " saved for " + p.name + ", including photos and tracking numbers." : "No gifts are saved for " + p.name + ".") + " This can't be undone.")) return;
+    update(function(s){
+      return Object.assign({}, s, {
+        people: s.people.filter(function(x){ return x.id !== p.id; }),
+        gifts: s.gifts.filter(function(g){ return g.personId !== p.id; })
+      });
+    }, true);
+    toast(p.name + " and their gifts were deleted.");
+    showView("view-people");
+  });
+  // gift form
+  $("giftFormBack").addEventListener("click", function(){
+    var pid = $("gfPerson").value || currentPersonId;
+    if (pid && personById(pid)) openPerson(pid); else showView("view-people");
+  });
+  $("gfPerson").addEventListener("change", function(){
+    var p = personById($("gfPerson").value);
+    fillOccasionSelect($("gfPerson").value, p && p.occasions[0] ? p.occasions[0].label : "");
+  });
+  $("giftSaveBtn").addEventListener("click", saveGift);
+  $("giftDeleteBtn").addEventListener("click", deleteGiftFromForm);
+  $("gfPhotoBtn").addEventListener("click", function(){ $("gfPhotoFile").click(); });
+  $("gfPhotoFile").addEventListener("change", function(){
+    readFileAsDataUrl($("gfPhotoFile").files[0], function(d){ giftPhotoData = d; refreshGiftPhotoPreviews(); });
+  });
+  $("gfPhotoRemove").addEventListener("click", function(){ giftPhotoData = null; refreshGiftPhotoPreviews(); });
+  $("gfShipPhotoBtn").addEventListener("click", function(){ $("gfShipFile").click(); });
+  $("gfShipFile").addEventListener("change", function(){
+    readFileAsDataUrl($("gfShipFile").files[0], function(d){ giftShipData = d; refreshGiftPhotoPreviews(); });
+  });
+  $("gfShipRemove").addEventListener("click", function(){ giftShipData = null; refreshGiftPhotoPreviews(); });
+  // upcoming
+  $("upcomingToggleBtn").addEventListener("click", function(){
+    upcomingShowAll = !upcomingShowAll;
+    renderUpcoming();
+  });
+  // notifications
+  wireSeg($("ntBySeg"), "data-by", function(by){ chooseNotifyBy(by); });
+  wireSeg($("ntDaysSeg"), "data-days", function(d){
+    update(function(s){ return Object.assign({}, s, {reminderDays: Number(d) || 30}); }, true);
+    renderNotifications();
+  });
+  $("ntOn").addEventListener("change", function(){
+    var on = $("ntOn").checked;
+    update(function(s){ return Object.assign({}, s, {notificationsOn: on}); }, true);
+    renderNotifications(); updateBell();
+  });
+  $("ntEmailSaveBtn").addEventListener("click", function(){
+    var v = $("ntEmail").value.trim();
+    if (!validEmail(v)){ showMsg($("ntMsg"), "Type a full email address, like name@example.com."); return; }
+    hideMsg($("ntMsg"));
+    update(function(s){ return Object.assign({}, s, {notifyEmail: v, notifyBy: "email"}); }, true);
+    toast("We'll send reminders to that address.");
+    renderNotifications();
+  });
+  // budget
+  $("budgetChangeBtn").addEventListener("click", function(){
+    $("budgetInput").value = String(state.budget);
+    $("budgetEditWrap").classList.remove("hidden");
+  });
+  $("budgetSaveBtn").addEventListener("click", function(){
+    var t = Number($("budgetInput").value);
+    if (isNaN(t) || t < 0) return;
+    update(function(s){ return Object.assign({}, s, {budget: t}); }, true);
+    $("budgetEditWrap").classList.add("hidden");
+    renderBudget();
+  });
+  // import
+  $("impFile").addEventListener("change", function(){
+    var f = $("impFile").files[0];
+    if (!f) return;
+    hideMsg($("impMsg"));
+    readCalendarFile(f).then(function(r){
+      importEvents = r.events;
+      renderImportReview();
+      showMsg($("impMsg"), "Found " + r.events.length + " date" + (r.events.length === 1 ? "" : "s") + " to check" +
+        (r.skipped ? " (" + r.skipped + " skipped — not birthdays, anniversaries or holidays)" : "") + ".", true);
+    }).catch(function(e){
+      importEvents = [];
+      renderImportReview();
+      showMsg($("impMsg"), "That file didn't have any calendar dates I could read. Try the .ics file from your calendar export.");
+    });
+  });
+  $("impSaveBtn").addEventListener("click", saveImport);
+  // feedback
+  $("fbSendBtn").addEventListener("click", sendFeedback);
+  // settings: lock
+  $("lockToggle").addEventListener("change", function(){
+    if ($("lockToggle").checked) $("lockSetup").classList.remove("hidden");
+    else $("lockSetup").classList.add("hidden");
+  });
+  $("lockSaveBtn").addEventListener("click", function(){
+    var a = $("lockNew").value.trim(), b = $("lockNew2").value.trim();
+    var msg = $("lockSetMsg"); hideMsg(msg);
+    if (!/^\d{4}$/.test(a)){ showMsg(msg, "The PIN must be exactly 4 digits."); return; }
+    if (a !== b){ showMsg(msg, "The two PINs don't match."); return; }
+    update(function(s){ return Object.assign({}, s, {pin: a, lockOn: true}); }, true);
+    $("lockNew").value = ""; $("lockNew2").value = "";
+    toast("Screen lock is on for this device.");
+    renderSettings();
+  });
+  $("pinChangeBtn").addEventListener("click", function(){
+    var msg = $("pinMsg"); hideMsg(msg);
+    if ($("pinCurrent").value !== state.pin){ showMsg(msg, "Your current PIN doesn't match."); return; }
+    var np = $("pinNew").value;
+    if (!/^\d{4}$/.test(np)){ showMsg(msg, "The new PIN must be exactly 4 digits."); return; }
+    if (np !== $("pinNew2").value){ showMsg(msg, "The two new PINs don't match."); return; }
+    update(function(s){ return Object.assign({}, s, {pin: np}); }, true);
+    $("pinCurrent").value = ""; $("pinNew").value = ""; $("pinNew2").value = "";
+    toast("Your PIN has been changed.");
+  });
+  $("pinOffBtn").addEventListener("click", function(){
+    var msg = $("pinMsg"); hideMsg(msg);
+    if ($("pinCurrent").value !== state.pin){ showMsg(msg, "Your current PIN doesn't match."); return; }
+    update(function(s){ return Object.assign({}, s, {lockOn: false}); }, true);
+    toast("Screen lock off.");
+    renderSettings();
+  });
+  // lock screen
+  $("lockOpenBtn").addEventListener("click", tryUnlock);
+  $("lockCode").addEventListener("keydown", function(e){ if (e.key === "Enter") tryUnlock(); });
+  $("lockSignOutBtn").addEventListener("click", signOut);
+  // backup
+  $("backupBtn").addEventListener("click", exportBackup);
+  $("backupLoadBtn").addEventListener("click", function(){ $("backupFile").click(); });
+  $("backupFile").addEventListener("change", function(){ importBackup($("backupFile").files[0]); });
+  // flush a pending save when the tab hides or closes (live behavior)
+  window.addEventListener("beforeunload", function(){ if (user && cloudReady) pushCloud(); });
+  document.addEventListener("visibilitychange", function(){
+    if (document.visibilityState === "hidden" && user && cloudReady) pushCloud();
+  });
+  // session
+  sb.auth.getSession().then(function(r){
+    var session = r.data && r.data.session;
+    if (session && session.user){ user = session.user; gateAndEnter(); }
+    else showScreen("frontScreen");
+  });
+  sb.auth.onAuthStateChange(function(event, session){
+    if (event === "SIGNED_OUT"){ user = null; cloudReady = false; showScreen("frontScreen"); }
+    else if (event === "PASSWORD_RECOVERY" && session && session.user){
+      user = session.user;
+      $("setPwIntro").textContent = "Set a new password for " + user.email + ".";
+      showScreen("setPwScreen");
+    }
+    else if (session && session.user && !user){ user = session.user; gateAndEnter(); }
+  });
+}
+function tryUnlock(){
+  var code = $("lockCode").value.trim();
+  if (code === state.pin){
+    $("lockCode").value = "";
+    hideMsg($("lockMsg"));
+    showScreen("appScreen");
+    showView("view-people");
+  } else {
+    showMsg($("lockMsg"), "That PIN didn't match. Try again.");
+  }
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
