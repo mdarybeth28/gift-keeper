@@ -169,8 +169,8 @@ var SEASONS = [
       <p class="muted">Birthdays and holidays too, with a little reminder before they sneak up on you.</p>
     </div>
     <div class="card center">
-      <p style="font-size:1.2rem;font-weight:800;">$11.99 — one time. No ads. No monthly anything.</p>
-      <p><a class="btn" href="https://buy.stripe.com/eVq4gzgEScLdfSd9470ZW01">Get Gift Keeper</a></p>
+      <p style="font-size:1.2rem;font-weight:800;">$15.99 a year. No ads, ever.</p>
+      <p><a class="btn" href="https://buy.stripe.com/14A9AT2O26mPfSd8030ZW04">Get Gift Keeper</a></p>
       <p class="muted">Paying lets you in by itself — no waiting on me. Check out with the same email you'll sign in with, then watch that inbox for your welcome note.</p>
     </div>
     <div class="card">
@@ -410,6 +410,7 @@ var SEASONS = [
         <input id="gfReadFile" type="file" accept="image/*" class="hidden">
         <div id="gfReadNote" class="hidden" style="background:var(--green-soft);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0;">
           <p id="gfReadText" style="margin:0;"></p>
+          <p id="gfSendMaryWrap" class="hidden" style="margin:10px 0 2px;"><button class="btn plain" id="gfSendMaryBtn" type="button">Can't read it? Send this photo to Mary</button></p>
         </div>
         <label for="gfPerson">Who is it for? *</label>
         <select id="gfPerson"></select>
@@ -608,6 +609,10 @@ var SEASONS = [
         <p><button class="btn plain" data-nav="view-feedback" type="button">Send feedback</button></p>
       </div>
       <div class="card">
+        <h2>☁️ Your list lives in the cloud</h2>
+        <p class="muted small">Your gift list is saved to your account in the cloud — not just on this phone. Sign in on any phone, tablet, or computer and your list is right there, the same on all of them. This device keeps a working copy so the app opens fast, and your account copy is the real one.</p>
+      </div>
+      <div class="card">
         <h2>🔒 Screen lock (optional)</h2>
         <p class="muted small">The lock is off unless you turn it on. It only locks this device's screen — your list itself is safe in your account, and signing out always works. The PIN never leaves this device.</p>
         <div id="lockOffWrap">
@@ -659,7 +664,7 @@ var SEASONS = [
           </div>
           <div id="delStep2" class="hidden">
             <p><b>This deletes your gift list and your account for good. It can't be undone.</b></p>
-            <p class="small muted">One important thing: deleting your account does <b>not</b> by itself give back the $11.99 you paid to join. Refunds are Marybeth's call — tap 💬 Send feedback above (or email her) and ask, and she'll take care of it. The promise in the Terms still stands: ask within 14 days of paying and you'll get your $11.99 back.</p>
+            <p class="small muted">One important thing: deleting your account does <b>not</b> by itself give back the $15.99 a year you pay, and it does <b>not</b> stop the yearly charge either — the subscription keeps renewing until it's cancelled in Stripe. To cancel, tap 💬 Send feedback above (or email Marybeth) and she'll stop it for you — or use the subscription link in the receipt emails Stripe sends you. Refunds are Marybeth's call the same way: ask within 14 days of a payment and you'll get that payment back, just like the Terms promise.</p>
             <label for="delConfirmEmail">Type your email to be sure</label>
             <input id="delConfirmEmail" type="email" autocomplete="off" placeholder="you@example.com">
             <div id="delMsg" class="msg"></div>
@@ -695,11 +700,11 @@ var SEASONS = [
         <h1>Gift Keeper — Privacy</h1>
         <p class="muted">Last updated: November 2026</p>
         <p>Gift Keeper is run by Mary Beth (Mary Beth's Finds). Questions: use the Send feedback button inside Gift Keeper.</p>
-        <p>What Gift Keeper keeps: your email address, and the gift lists you type in — people, gifts, hiding places, dates, and amounts you choose to add. That's it.</p>
+        <p>What Gift Keeper keeps: your email address, and the gift lists you type in — people, gifts, hiding places, dates, and amounts you choose to add. That's it. Your list is saved to your account in the cloud, so it's there when you sign in on any device — not only on one phone.</p>
         <p>If you tap "📸 Read a screenshot or label" on the gift form, that one photo goes to Google's Gemini reader, which reads the words on it and hands them back to the form for you to check — nothing is saved until you tap Save gift. The reader never hands back home addresses from a label, and Gift Keeper keeps a fingerprint of the photo plus the words it read, so reading the same photo again is free. The full plain-words version lives on the Privacy page in Settings.</p>
         <p>What it does NOT do: no ads, no trackers, and your list is never sold or shared with anyone. Nobody else can see your list — every person's list is private to their own sign-in.</p>
         <p>Payments are handled by Stripe. Gift Keeper never sees or stores your card number.</p>
-        <p>If you want your account and your list deleted, you can do it yourself in Settings — look for "Delete my account" — or send a feedback message inside the app and it will be removed. Deleting does not by itself refund the $11.99; refunds are Marybeth's call, as the Terms promise.</p>
+        <p>If you want your account and your list deleted, you can do it yourself in Settings — look for "Delete my account" — or send a feedback message inside the app and it will be removed. Deleting does not by itself refund the $15.99 a year, and it doesn't cancel the subscription either — refunds and cancellations are Marybeth's call, as the Terms promise.</p>
       </div>
     </section>
 
@@ -709,9 +714,10 @@ var SEASONS = [
       <div class="card">
         <h1>Gift Keeper — Terms</h1>
         <p class="muted">Last updated: November 2026</p>
-        <p>Gift Keeper costs $11.99, paid once. There is no subscription and no ads. Paying gives you your own Gift Keeper account, let in by itself as soon as your payment goes through.</p>
+        <p>Gift Keeper costs $15.99 a year. It renews once a year until you cancel, and there are never any ads. Paying gives you your own Gift Keeper account, let in by itself as soon as your payment goes through.</p>
         <p>Check out with the same email you will sign in with, so your payment and your account match.</p>
-        <p>Refunds: if Gift Keeper doesn't work for you, ask within 14 days of paying and you'll get your $11.99 back.</p>
+        <p>Refunds: if Gift Keeper doesn't work for you, ask within 14 days of a payment and you'll get that payment back.</p>
+        <p>To cancel: tap 💬 Send feedback inside the app (or email Marybeth) and she'll stop it for you — or use the subscription link in the receipt emails Stripe sends you. Cancelling stops the next yearly charge; Gift Keeper stays open for you until the year you paid for runs out.</p>
         <p>Gift Keeper is a helper for your own lists. Keep your sign-in and your PIN to yourself — the PIN lock only works on your own phone.</p>
       </div>
     </section>
@@ -730,7 +736,7 @@ var SEASONS = [
    the old app; different origin, no clash) plus one cloud row per
    user. The PIN lives only in the local blob — it is stripped (Bo)
    before anything is upserted, exactly like the live app.
-   Privacy + delete door (2026-11-09, NOT yet live): adds a
+   Privacy + delete door (2026-11-09, live): adds a
    standalone privacy page (privacy.html, linked from Settings)
    and a "Delete my account" door in Settings, patterned on Pet
    Keeper's proven door. Deleting is two steps on purpose — the
@@ -739,7 +745,36 @@ var SEASONS = [
    call goes to the new delete-account Edge Function (JWT ON),
    which deletes ONLY the caller's own account and rows for real.
    The warning says plainly that deleting does not refund the
-   one-time $11.99 by itself — refunds are Marybeth's hand call.
+   $15.99-a-year subscription by itself, and it does not cancel
+   the subscription either — cancellations and refunds are
+   Marybeth's hand call.
+   Send-this-photo-to-Mary link (2026-11-09, NOT yet live):
+   Mary's catch — in Buddy and Pet Keeper a failed read offers
+   "send this photo to Mary" on the SAME screen, but Gift's
+   photo door lives on the Feedback page, so a person stuck on
+   the gift form had to go hunting. The read note (success,
+   couldn't-read, or failed — whenever the reader handled a
+   photo) now also shows a "Can't read it? Send this photo to
+   Mary" button: it carries the photo the reader just handled
+   over to the Feedback door, already attached, with a starter
+   sentence in the message box (only when the box is empty —
+   typed words are never replaced), and the Feedback door's
+   proven send flow runs exactly as before. The gift form
+   keeps its own photos the whole time.
+   Yearly price + cloud wording (2026-11-09, NOT yet live):
+   Gift Keeper moves from the old one-time price to $15.99
+   a year (Mary's call, 2026-11-09). The front-door price line, the
+   Terms, the in-app Privacy words, and the delete warning now
+   tell the yearly truth, the delete warning also says plainly
+   that deleting does not cancel the subscription (the cancel
+   door is in the Terms), and the buy button carries a
+   placeholder token until the new Stripe payment link exists
+   — the setup swaps the token for the real link before this
+   file is uploaded. The Settings gain a small cloud card:
+   the list is saved to the account in the cloud (the gift_lists
+   row) and the device keeps a working copy, which the lock
+   card and the in-app Privacy words now also say out loud.
+   Wording only — no reader, send-link, or feature change.
    Screenshot/label reader (2026-11-09, NOT yet live): adds a
    "📸 Read a screenshot or label" door at the top of the gift
    form, restoring the Vibely-era reader on Mary's own stack.
@@ -1596,6 +1631,11 @@ function deleteGiftFromForm(){
    that person; a name that matches nobody is only reported in the
    note — the reader never creates a person. */
 var giftReadBusy = false;
+var lastGiftReadDataUrl = "";
+function giftSendMaryShow(){
+  var w = $("gfSendMaryWrap");
+  if (w) w.classList.toggle("hidden", !lastGiftReadDataUrl && !giftPhotoData && !giftShipData);
+}
 function giftReadNote(text){
   var n = $("gfReadNote"), t = $("gfReadText");
   if (!n || !t) return;
@@ -1716,6 +1756,7 @@ function applyGiftRead(r, dataUrl){
   notes.forEach(function(n){ text += " " + n; });
   text += " Check it all over, fix anything, then tap Save gift.";
   giftReadNote(text);
+  giftSendMaryShow();
 }
 function giftBlobToDataUrl(blob){
   return new Promise(function(resolve){
@@ -1729,6 +1770,7 @@ function giftBlobToDataUrl(blob){
 }
 function readGiftPhoto(file){
   if (!file || giftReadBusy) return;
+  lastGiftReadDataUrl = "";
   giftReadBusy = true;
   var btn = $("gfReadBtn"), oldLabel = btn ? btn.textContent : "";
   if (btn){ btn.disabled = true; btn.textContent = "Reading…"; }
@@ -1751,9 +1793,11 @@ function readGiftPhoto(file){
     });
   }).then(function(out){
     var rd = out.rd;
+    lastGiftReadDataUrl = out.durl;
     if (giftReadIsEmpty(rd)){
       attachReadPhoto(rd || {}, out.durl);
       giftReadNote("I couldn't read anything usable from that photo — it's still attached below, and the form works the same as always: fill in what you need and tap Save gift.");
+      giftSendMaryShow();
       return;
     }
     applyGiftRead(rd, out.durl);
@@ -1762,8 +1806,9 @@ function readGiftPhoto(file){
     // The form is never blocked by a failed read: the photo itself
     // still lands in the gift photo slot (as if it had been picked
     // there) and every field stays fillable by hand.
-    readFileAsDataUrl(file, function(d){ if (d) attachReadPhoto({}, d); });
+    readFileAsDataUrl(file, function(d){ if (d){ lastGiftReadDataUrl = d; attachReadPhoto({}, d); giftSendMaryShow(); } });
     giftReadNote("That read didn't go through — the reader may be busy, or the photo may not have loaded. Your photo is attached below anyway, and you can fill the form in by hand, same as always.");
+    giftSendMaryShow();
   }).then(finish, finish);
 }
 
@@ -2171,6 +2216,7 @@ async function sendFeedback(){
   }
   btn.disabled = false; btn.textContent = "Send feedback";
   $("fbMessage").value = "";
+  fbGiftCarryDataUrl = "";
   showView("view-people");
 }
 
@@ -2182,17 +2228,72 @@ async function sendFeedback(){
    works for 7 days. Nothing about the plain message flow changes:
    this runs after the message has already been saved and emailed
    the usual way. */
+var fbGiftCarryDataUrl = ""; /* a read photo carried from the gift form, waiting for its first trip */
 var fbPhotoFile = null; /* the picked photo File - this device only */
 var fbPhotoUrl = "";    /* preview object URL for the picked photo */
 function clearFeedbackPhoto(){
+  fbGiftCarryDataUrl = "";
   fbPhotoFile = null;
   if (fbPhotoUrl){ try { URL.revokeObjectURL(fbPhotoUrl); } catch(e){} fbPhotoUrl = ""; }
   var f = $("fbPhotoFile"); if (f) f.value = "";
   var w = $("fbPhotoWrap"); if (w) w.classList.add("hidden");
   var i = $("fbPhotoPreview"); if (i) i.removeAttribute("src");
 }
+function dataUrlToFeedbackFile(dataUrl){
+  // A read photo rides to the Feedback door as a data URL; the
+  // door's machinery holds a File. Turn one into the other the
+  // way the rest of this app reads files — FileReader one way,
+  // byte decode the other; never fetch() a data: URL (some
+  // WebViews refuse it). Any trouble and there is simply no
+  // carried photo — the door still works exactly as before.
+  return new Promise(function(resolve){
+    try {
+      var img = new Image();
+      img.onload = function(){
+        try {
+          var w = img.naturalWidth || img.width || 0, h = img.naturalHeight || img.height || 0;
+          if (!(w > 0 && h > 0)){ resolve(null); return; }
+          var c = document.createElement("canvas"); c.width = w; c.height = h;
+          var ctx = c.getContext && c.getContext("2d");
+          if (!ctx || !c.toBlob){ resolve(null); return; }
+          ctx.drawImage(img, 0, 0, w, h);
+          c.toBlob(function(b){ resolve(b || null); }, "image/jpeg", 0.92);
+        } catch(e){ resolve(null); }
+      };
+      img.onerror = function(){ resolve(null); };
+      img.src = String(dataUrl || "");
+    } catch(e){ resolve(null); }
+  }).then(function(blob){
+    if (!blob) return null;
+    try { return new File([blob], "gift-photo.jpg", {type: "image/jpeg"}); }
+    catch(e){ blob.name = "gift-photo.jpg"; return blob; }
+  }).catch(function(){ return null; });
+}
+function carryGiftPhotoToFeedback(){
+  // "Can't read it? Send this photo to Mary" on the gift form:
+  // carry the photo the reader just handled (else the gift
+  // photo, else the label photo) over to the Feedback door,
+  // already attached, with a starter sentence waiting — but only
+  // in a message box that's still empty; words somebody typed
+  // are never replaced. The gift form's own photo slots are
+  // copies, never touched. A carried photo goes through the
+  // door's own pick function, so it clears after a send the
+  // same way a picked photo does.
+  var dataUrl = lastGiftReadDataUrl || giftPhotoData || giftShipData || "";
+  var box = $("fbMessage");
+  if (box && !box.value.trim())
+    box.value = "Gift Keeper couldn't read this photo — could you look at it for me?";
+  showView("view-feedback");
+  if (!dataUrl) return;
+  if (fbGiftCarryDataUrl === dataUrl && fbPhotoFile) return; /* this carry is already attached */
+  fbGiftCarryDataUrl = dataUrl;
+  dataUrlToFeedbackFile(dataUrl).then(function(file){
+    if (file && fbGiftCarryDataUrl === dataUrl) pickFeedbackPhoto(file);
+  });
+}
 function pickFeedbackPhoto(file){
   if (!file) return;
+  fbGiftCarryDataUrl = "";
   fbPhotoFile = file;
   if (fbPhotoUrl){ try { URL.revokeObjectURL(fbPhotoUrl); } catch(e){} fbPhotoUrl = ""; }
   try { fbPhotoUrl = URL.createObjectURL(file); } catch(e){ fbPhotoUrl = ""; }
@@ -2792,6 +2893,7 @@ function init(){
     var f = $("gfReadFile").files[0];
     if (f) readGiftPhoto(f);
   });
+  $("gfSendMaryBtn").addEventListener("click", carryGiftPhotoToFeedback);
   // upcoming
   $("upcomingToggleBtn").addEventListener("click", function(){
     upcomingShowAll = !upcomingShowAll;
