@@ -171,7 +171,7 @@ var SEASONS = [
     <div class="card center">
       <p style="font-size:1.2rem;font-weight:800;">$11.99 — one time. No ads. No monthly anything.</p>
       <p><a class="btn" href="https://buy.stripe.com/eVq4gzgEScLdfSd9470ZW01">Get Gift Keeper</a></p>
-      <p class="muted">I let everyone in by hand, usually the same day. Check out with the same email you'll sign in with.</p>
+      <p class="muted">Paying lets you in by itself — no waiting on me. Check out with the same email you'll sign in with, then watch that inbox for your welcome note.</p>
     </div>
     <div class="card">
       <h2>Already have Gift Keeper?</h2>
@@ -227,7 +227,7 @@ var SEASONS = [
       </div>
 
       <div id="requestPane" class="hidden">
-        <p class="muted">Gift Keeper is let in by hand. Ask here, and Marybeth will let you in — usually the same day. Use the same email you'll sign in with.</p>
+        <p class="muted">Ask here, and Marybeth will let you in by hand — usually the same day. (Already paid? You don't need this — paying lets you in by itself.) Use the same email you'll sign in with.</p>
         <label for="rqEmail">Email</label>
         <input id="rqEmail" type="email" autocomplete="email" placeholder="you@example.com">
         <div id="rqMsg" class="msg"></div>
@@ -265,7 +265,7 @@ var SEASONS = [
     <div class="card" style="margin-top:30px;">
       <div class="big-emoji">🎁</div>
       <h1>Gift Keeper is private</h1>
-      <p id="gateText">This email isn't on the approved list yet. Marybeth lets everyone in by hand — ask for access and she'll take care of it, usually the same day.</p>
+      <p id="gateText">This email isn't on the approved list yet. Just paid? Give it a minute, then sign out and sign back in with the email you paid with. Haven't paid? Ask for access and Marybeth will take care of it, usually the same day.</p>
       <div id="gateMsg" class="msg"></div>
       <p><button class="btn" id="gateRequestBtn" type="button">Request access</button></p>
       <p class="center"><button class="iconbtn" id="gateSignOutBtn" type="button">Sign out</button></p>
@@ -643,6 +643,23 @@ var SEASONS = [
         <div id="backupMsg" class="msg"></div>
         <h3>Account</h3>
         <p><button class="btn secondary" id="setSignOutBtn" type="button">Sign out</button></p>
+        <p class="center small"><a href="privacy.html" target="_blank" rel="noopener">Privacy — what Gift Keeper keeps, in plain words</a></p>
+        <div style="border-top:1px solid var(--line);margin-top:18px;padding-top:6px;">
+          <h3 style="color:var(--warn);">Delete my account</h3>
+          <p class="small muted">If you want to leave Gift Keeper for good, you can delete your account right here. Marybeth does not have to do it for you.</p>
+          <div id="delStep1">
+            <p><button class="btn danger" id="delStartBtn" type="button">Delete my account</button></p>
+          </div>
+          <div id="delStep2" class="hidden">
+            <p><b>This deletes your gift list and your account for good. It can't be undone.</b></p>
+            <p class="small muted">One important thing: deleting your account does <b>not</b> by itself give back the $11.99 you paid to join. Refunds are Marybeth's call — tap 💬 Send feedback above (or email her) and ask, and she'll take care of it. The promise in the Terms still stands: ask within 14 days of paying and you'll get your $11.99 back.</p>
+            <label for="delConfirmEmail">Type your email to be sure</label>
+            <input id="delConfirmEmail" type="email" autocomplete="off" placeholder="you@example.com">
+            <div id="delMsg" class="msg"></div>
+            <p style="margin-top:12px;"><button class="btn danger" id="delDoBtn" type="button" disabled>Yes, delete everything</button></p>
+            <p class="center"><button class="iconbtn" id="delCancelBtn" type="button">Keep my account</button></p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -674,7 +691,7 @@ var SEASONS = [
         <p>What Gift Keeper keeps: your email address, and the gift lists you type in — people, gifts, hiding places, dates, and amounts you choose to add. That's it.</p>
         <p>What it does NOT do: no ads, no trackers, and your list is never sold or shared with anyone. Nobody else can see your list — every person's list is private to their own sign-in.</p>
         <p>Payments are handled by Stripe. Gift Keeper never sees or stores your card number.</p>
-        <p>If you want your account and your list deleted, send a feedback message inside the app and it will be removed.</p>
+        <p>If you want your account and your list deleted, you can do it yourself in Settings — look for "Delete my account" — or send a feedback message inside the app and it will be removed. Deleting does not by itself refund the $11.99; refunds are Marybeth's call, as the Terms promise.</p>
       </div>
     </section>
 
@@ -684,7 +701,7 @@ var SEASONS = [
       <div class="card">
         <h1>Gift Keeper — Terms</h1>
         <p class="muted">Last updated: November 2026</p>
-        <p>Gift Keeper costs $11.99, paid once. There is no subscription and no ads. Paying gives you your own Gift Keeper account, let in by hand — usually the same day.</p>
+        <p>Gift Keeper costs $11.99, paid once. There is no subscription and no ads. Paying gives you your own Gift Keeper account, let in by itself as soon as your payment goes through.</p>
         <p>Check out with the same email you will sign in with, so your payment and your account match.</p>
         <p>Refunds: if Gift Keeper doesn't work for you, ask within 14 days of paying and you'll get your $11.99 back.</p>
         <p>Gift Keeper is a helper for your own lists. Keep your sign-in and your PIN to yourself — the PIN lock only works on your own phone.</p>
@@ -704,7 +721,19 @@ var SEASONS = [
    State lives in ONE localStorage key (gift-keeper-v1, same name as
    the old app; different origin, no clash) plus one cloud row per
    user. The PIN lives only in the local blob — it is stripped (Bo)
-   before anything is upserted, exactly like the live app.        */
+   before anything is upserted, exactly like the live app.
+   Privacy + delete door (2026-11-09, NOT yet live): adds a
+   standalone privacy page (privacy.html, linked from Settings)
+   and a "Delete my account" door in Settings, patterned on Pet
+   Keeper's proven door. Deleting is two steps on purpose — the
+   first button only opens a warning, and the real delete button
+   stays off until the person types their own sign-in email. The
+   call goes to the new delete-account Edge Function (JWT ON),
+   which deletes ONLY the caller's own account and rows for real.
+   The warning says plainly that deleting does not refund the
+   one-time $11.99 by itself — refunds are Marybeth's hand call.
+   Everything above this note (the photo-attach build plus the
+   Pet-style front wording edits) is unchanged.                  */
 var SUPABASE_URL = "https://sqlebafcftyqqmdsgjrn.supabase.co";
 var SUPABASE_KEY = "sb_publishable_zLttR3cRoFjA1LyTgpDBPg_CiEQVmw9";
 var OWNER_EMAIL = "marybeth.davis28@gmail.com";
@@ -2055,6 +2084,7 @@ function renderSettings(){
   $("lockToggle").checked = on;
   $("lockSetup").classList.add("hidden");
   $("adminNavBtn").classList.toggle("hidden", !isOwner());
+  closeDeleteStep();
 }
 
 /* ---------- backup (ported from the live admin chunk) ---------- */
@@ -2234,7 +2264,7 @@ async function gateAndEnter(){
   $("gateRequestBtn").classList.add("hidden");
   var approved = await checkApproved();
   if (!approved){
-    $("gateText").textContent = "This email isn't on the approved list yet. Marybeth lets everyone in by hand — ask for access and she'll take care of it, usually the same day.";
+    $("gateText").textContent = "This email isn't on the approved list yet. Just paid? Give it a minute, then sign out and sign back in with the email you paid with. Haven't paid? Ask for access and Marybeth will take care of it, usually the same day.";
     $("gateRequestBtn").classList.remove("hidden");
     return;
   }
@@ -2351,6 +2381,59 @@ function signOut(){
   sb.auth.signOut().then(function(){
     user = null; cloudReady = false; lockArmedThisLoad = false;
     showScreen("frontScreen");
+  });
+}
+
+/* ---------- delete my account (privacy + delete door) ----------
+   Two steps on purpose: the Settings button only OPENS the
+   warning; deleting takes a second, separate button that stays
+   disabled until the person types their own sign-in email. The
+   button alone never deletes anything. The call goes to the
+   delete-account Edge Function, which checks the caller's own
+   login and deletes ONLY that account (the gift list row, the
+   photo notes + files, the feedback notes, the access requests,
+   and the sign-in itself). Nothing is hidden-and-kept: the
+   function really deletes. If deleting fails, the account is
+   left exactly as it was and the person is told so, with the
+   💬 Send feedback door as the fallback. On success the device
+   copy is wiped too — this device then holds nothing of the
+   deleted account. */
+function openDeleteStep(){
+  $("delStep1").classList.add("hidden");
+  $("delStep2").classList.remove("hidden");
+  $("delConfirmEmail").value = "";
+  $("delDoBtn").disabled = true;
+  hideMsg($("delMsg"));
+}
+function closeDeleteStep(){
+  $("delStep2").classList.add("hidden");
+  $("delStep1").classList.remove("hidden");
+  $("delConfirmEmail").value = "";
+}
+function deleteMyAccount(){
+  var btn = $("delDoBtn"), msg = $("delMsg");
+  if(!user){ return; }
+  var typed = $("delConfirmEmail").value.trim().toLowerCase();
+  if(typed !== String(user.email || "").toLowerCase()){
+    showMsg(msg, "That email doesn't match the one you're signed in with, so nothing was deleted.");
+    return;
+  }
+  btn.disabled = true; btn.textContent = "Deleting…";
+  hideMsg(msg);
+  sb.functions.invoke("delete-account", {body: {}})
+  .then(function(r){
+    if(r.error) throw r.error;
+    if(r.data && r.data.error) throw new Error(r.data.error);
+    try { localStorage.removeItem(STORE_KEY); } catch(e){}
+    return sb.auth.signOut().then(function(){
+      user = null; cloudReady = false; lockArmedThisLoad = false; state = defaultState();
+      showScreen("frontScreen");
+      toast("Your account and gift list are deleted. Thank you for keeping them with us 🎁");
+    });
+  })
+  .catch(function(e){
+    btn.disabled = false; btn.textContent = "Yes, delete everything";
+    showMsg(msg, "Deleting didn't finish — your account is still here, nothing was removed. Try once more, or tap 💬 Send feedback above and Marybeth will delete it for you. (" + friendlyErr(e) + ")");
   });
 }
 
@@ -2558,6 +2641,14 @@ function init(){
   $("fbPhotoBtn").addEventListener("click", function(){ $("fbPhotoFile").click(); });
   $("fbPhotoFile").addEventListener("change", function(){ pickFeedbackPhoto($("fbPhotoFile").files[0]); });
   $("fbPhotoRemove").addEventListener("click", clearFeedbackPhoto);
+  // settings: delete my account
+  $("delStartBtn").addEventListener("click", openDeleteStep);
+  $("delCancelBtn").addEventListener("click", closeDeleteStep);
+  $("delDoBtn").addEventListener("click", deleteMyAccount);
+  $("delConfirmEmail").addEventListener("input", function(){
+    var want = user ? String(user.email || "").toLowerCase() : "";
+    $("delDoBtn").disabled = !(want && $("delConfirmEmail").value.trim().toLowerCase() === want);
+  });
   // settings: lock
   $("lockToggle").addEventListener("change", function(){
     if ($("lockToggle").checked) $("lockSetup").classList.remove("hidden");
