@@ -404,6 +404,13 @@ var SEASONS = [
       <p><button class="iconbtn" id="giftFormBack" type="button">← Back</button></p>
       <div class="card">
         <h1 id="giftFormTitle">Add a gift</h1>
+        <h3>📸 Read a screenshot or label (optional)</h3>
+        <p class="small muted" style="margin-top:0;">Ordered it online? Pick the order screenshot, or a photo of the shipping label, and Gift Keeper reads the gift's name, price, tracking and more into the form for you. Nothing is saved by the read — you check everything and tap Save gift yourself.</p>
+        <p><button class="btn plain" id="gfReadBtn" type="button">📸 Read a screenshot or label</button></p>
+        <input id="gfReadFile" type="file" accept="image/*" class="hidden">
+        <div id="gfReadNote" class="hidden" style="background:var(--green-soft);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0;">
+          <p id="gfReadText" style="margin:0;"></p>
+        </div>
         <label for="gfPerson">Who is it for? *</label>
         <select id="gfPerson"></select>
         <label for="gfName">Gift name *</label>
@@ -689,6 +696,7 @@ var SEASONS = [
         <p class="muted">Last updated: November 2026</p>
         <p>Gift Keeper is run by Mary Beth (Mary Beth's Finds). Questions: use the Send feedback button inside Gift Keeper.</p>
         <p>What Gift Keeper keeps: your email address, and the gift lists you type in — people, gifts, hiding places, dates, and amounts you choose to add. That's it.</p>
+        <p>If you tap "📸 Read a screenshot or label" on the gift form, that one photo goes to Google's Gemini reader, which reads the words on it and hands them back to the form for you to check — nothing is saved until you tap Save gift. The reader never hands back home addresses from a label, and Gift Keeper keeps a fingerprint of the photo plus the words it read, so reading the same photo again is free. The full plain-words version lives on the Privacy page in Settings.</p>
         <p>What it does NOT do: no ads, no trackers, and your list is never sold or shared with anyone. Nobody else can see your list — every person's list is private to their own sign-in.</p>
         <p>Payments are handled by Stripe. Gift Keeper never sees or stores your card number.</p>
         <p>If you want your account and your list deleted, you can do it yourself in Settings — look for "Delete my account" — or send a feedback message inside the app and it will be removed. Deleting does not by itself refund the $11.99; refunds are Marybeth's call, as the Terms promise.</p>
@@ -732,6 +740,17 @@ var SEASONS = [
    which deletes ONLY the caller's own account and rows for real.
    The warning says plainly that deleting does not refund the
    one-time $11.99 by itself — refunds are Marybeth's hand call.
+   Screenshot/label reader (2026-11-09, NOT yet live): adds a
+   "📸 Read a screenshot or label" door at the top of the gift
+   form, restoring the Vibely-era reader on Mary's own stack.
+   The photo is shrunk on the device, read by the new read-gift
+   Edge Function (Gemini — the key lives only there), and the
+   read fills the form for checking; nothing saves until the
+   person taps Save gift. Reads are cached by photo fingerprint
+   (the gift_reads table), so a repeat photo is free; 60 new
+   reads a day. The standalone privacy page gains matching
+   reader wording in the same package — the reader must never
+   go live without it.
    Everything above this note (the photo-attach build plus the
    Pet-style front wording edits) is unchanged.                  */
 var SUPABASE_URL = "https://sqlebafcftyqqmdsgjrn.supabase.co";
@@ -1467,6 +1486,7 @@ function fillCarrierSelect(current){
 function openGiftForm(giftId, personId){
   editingGiftId = giftId || null;
   hideMsg($("gfMsg"));
+  giftReadNote("");
   var g = giftId ? giftById(giftId) : null;
   var folks = state.people.filter(function(p){ return !p.archived; });
   $("gfPerson").innerHTML = folks.map(function(p){
@@ -1553,6 +1573,198 @@ function deleteGiftFromForm(){
   }, true);
   toast(g.name + " was deleted.");
   openPerson(pid);
+}
+
+/* ---------- read a screenshot or label (the 📸 door on the gift form) ----------
+   Restores the Vibely-era reader on Mary's own stack: pick an order
+   screenshot or a shipping-label photo -> shrink it here on the
+   device (the feedback photo prep, 1600px JPEG 0.85, <img> decode,
+   never createImageBitmap) -> the read-gift Edge Function reads it
+   (Gemini - the key lives only in that function's secrets) -> the
+   read FILLS this form and a note in the form says what was filled.
+   Nothing is saved by the read: the person checks the form and taps
+   Save gift, exactly like typing it in (review-before-save). A read
+   that fails or comes back empty never blocks the form — the photo
+   still lands in a photo slot and the form works as it always has.
+   Fill rule: a read only fills a field the form still has empty
+   (the purchase date counts as empty while it still shows the
+   today the form opened with); a value already typed by hand is
+   never overwritten. Who-it's-for and the occasion are selections:
+   they move only when the read matches one of the form's own
+   choices. A recipient name that matches one of your people
+   (same name, letter for letter apart from case and spaces) picks
+   that person; a name that matches nobody is only reported in the
+   note — the reader never creates a person. */
+var giftReadBusy = false;
+function giftReadNote(text){
+  var n = $("gfReadNote"), t = $("gfReadText");
+  if (!n || !t) return;
+  if (!text){ n.classList.add("hidden"); t.textContent = ""; return; }
+  t.textContent = text;
+  n.classList.remove("hidden");
+}
+function giftNameKey(s){ return String(s || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim(); }
+function giftReadFieldName(key){
+  return ({gift_name: "the gift's name", price: "the price", purchase_date: "the purchase date",
+           tracking_number: "the tracking number", carrier: "the carrier",
+           recipient_name: "who it's for", occasion: "the occasion",
+           hiding_place: "the hiding place"})[key] || key;
+}
+function giftReadIsEmpty(r){
+  if (!r) return true;
+  return !(r.gift_name || r.price || r.recipient_name || r.occasion || r.purchase_date ||
+           r.tracking_number || r.carrier || r.hiding_place);
+}
+function attachReadPhoto(r, dataUrl){
+  // The read photo keeps a home on the gift, in the slot it fits:
+  // a label-looking read (tracking but no price) goes to the
+  // shipping-label slot, anything else to the gift photo slot. A
+  // slot somebody already filled by hand is never overwritten —
+  // the other slot takes it instead, and if both are taken the
+  // photo simply isn't kept.
+  if (!dataUrl) return "";
+  var looksLabel = !!(r && r.tracking_number) && !(r && r.price);
+  if (looksLabel){
+    if (!giftShipData){ giftShipData = dataUrl; refreshGiftPhotoPreviews(); return "label"; }
+    if (!giftPhotoData){ giftPhotoData = dataUrl; refreshGiftPhotoPreviews(); return "gift"; }
+  } else {
+    if (!giftPhotoData){ giftPhotoData = dataUrl; refreshGiftPhotoPreviews(); return "gift"; }
+    if (!giftShipData){ giftShipData = dataUrl; refreshGiftPhotoPreviews(); return "label"; }
+  }
+  return "";
+}
+function applyGiftRead(r, dataUrl){
+  var filled = [], notes = [], conflict = false;
+  var slot = attachReadPhoto(r, dataUrl);
+  if (r.gift_name){
+    if (!$("gfName").value.trim()){ $("gfName").value = r.gift_name; filled.push("the gift's name"); }
+    else if ($("gfName").value.trim() !== r.gift_name) conflict = true;
+  }
+  if (r.price){
+    if (!$("gfPrice").value.trim()){ $("gfPrice").value = r.price; filled.push("the price"); }
+    else if ($("gfPrice").value.trim() !== r.price) conflict = true;
+  }
+  if (r.purchase_date){
+    var dv = $("gfDate").value;
+    if (!dv || dv === todayISO()){
+      if (dv !== r.purchase_date) $("gfDate").value = r.purchase_date;
+      filled.push("the purchase date");
+    }
+    else if (dv !== r.purchase_date) conflict = true;
+  }
+  if (r.tracking_number){
+    if (!$("gfTracking").value.trim()){ $("gfTracking").value = r.tracking_number; filled.push("the tracking number"); }
+    else if ($("gfTracking").value.trim() !== r.tracking_number) conflict = true;
+  }
+  if (r.carrier){
+    if (!$("gfCarrier").value){ fillCarrierSelect(r.carrier); $("gfCarrier").value = r.carrier; filled.push("the carrier"); }
+    else if ($("gfCarrier").value !== r.carrier) conflict = true;
+  }
+  if (r.hiding_place){
+    if (!$("gfHiding").value.trim()){ $("gfHiding").value = r.hiding_place; filled.push("where you hid it"); }
+    else if ($("gfHiding").value.trim() !== r.hiding_place) conflict = true;
+  }
+  // Who it's for is a selection: the read picks the person only when
+  // the name on the photo matches one of your people. No match, no
+  // new person — the name is reported in the note instead.
+  var matchedPerson = null;
+  if (r.recipient_name){
+    var want = giftNameKey(r.recipient_name);
+    var folks = state.people.filter(function(p){ return !p.archived; });
+    for (var i = 0; i < folks.length; i++){
+      if (giftNameKey(folks[i].name) === want){ matchedPerson = folks[i]; break; }
+    }
+    if (matchedPerson){
+      if ($("gfPerson").value !== matchedPerson.id){
+        $("gfPerson").value = matchedPerson.id;
+        fillOccasionSelect(matchedPerson.id, "");
+      }
+      filled.push("who it's for (" + matchedPerson.name + ")");
+    } else {
+      notes.push("The photo is addressed to \u201C" + r.recipient_name + "\u201D — that name doesn't match your people, so pick who it's for above (or add them first).");
+    }
+  }
+  // The occasion is a selection too: it moves only when the read
+  // names one of the occasions this form already offers.
+  if (r.occasion){
+    var opts = $("gfOccasion").options, hit = "";
+    for (var j = 0; j < opts.length; j++){
+      if (opts[j].value && giftNameKey(opts[j].value) === giftNameKey(r.occasion)){ hit = opts[j].value; break; }
+    }
+    if (hit){
+      if ($("gfOccasion").value !== hit) $("gfOccasion").value = hit;
+      filled.push("the occasion");
+    } else {
+      notes.push("It looked like the occasion was \u201C" + r.occasion + "\u201D — pick it in the list above if that's right.");
+    }
+  }
+  var missed = [];
+  [["gift_name", "the gift's name"], ["price", "the price"], ["purchase_date", "the purchase date"],
+   ["tracking_number", "the tracking number"], ["carrier", "the carrier"],
+   ["recipient_name", "who it's for"], ["occasion", "the occasion"]].forEach(function(pair){
+    if (!r[pair[0]]) missed.push(pair[1]);
+  });
+  var unsure = Array.isArray(r.unsure) ? r.unsure : [], warn = [];
+  unsure.forEach(function(u){ if (r[u]) warn.push(giftReadFieldName(u)); });
+  var text = "📸 Read from your photo" + (r.cached ? " (this photo was read before, so this one was free)" : "") + " — nothing is saved yet.";
+  if (filled.length) text += " Filled in: " + filled.join(", ") + ".";
+  if (slot === "gift") text += " The photo is saved with the gift below.";
+  if (slot === "label") text += " The photo is saved as the shipping label below.";
+  if (conflict) text += " A thing or two on the photo was already filled in on the form, so I left yours alone.";
+  if (warn.length) text += " Double-check " + warn.join(" and ") + " — it wasn't fully clear.";
+  if (missed.length) text += " Couldn't read: " + missed.join(", ") + ".";
+  notes.forEach(function(n){ text += " " + n; });
+  text += " Check it all over, fix anything, then tap Save gift.";
+  giftReadNote(text);
+}
+function giftBlobToDataUrl(blob){
+  return new Promise(function(resolve){
+    try {
+      var fr = new FileReader();
+      fr.onload = function(){ resolve(String(fr.result || "")); };
+      fr.onerror = function(){ resolve(""); };
+      fr.readAsDataURL(blob);
+    } catch(e){ resolve(""); }
+  });
+}
+function readGiftPhoto(file){
+  if (!file || giftReadBusy) return;
+  giftReadBusy = true;
+  var btn = $("gfReadBtn"), oldLabel = btn ? btn.textContent : "";
+  if (btn){ btn.disabled = true; btn.textContent = "Reading…"; }
+  giftReadNote("Reading your photo…");
+  var finish = function(){
+    giftReadBusy = false;
+    if (btn){ btn.disabled = false; btn.textContent = oldLabel; }
+    var f = $("gfReadFile"); if (f) f.value = "";
+  };
+  feedbackPrepPhoto(file).then(function(blob){
+    var mime = (blob && blob.type) || file.type || "image/jpeg";
+    return giftBlobToDataUrl(blob).then(function(durl){
+      if (!durl) throw new Error("That photo could not be opened.");
+      var i = durl.indexOf(",");
+      var b64 = i >= 0 ? durl.slice(i + 1) : durl;
+      return sb.functions.invoke("read-gift", {body: {image_base64: b64, mime_type: mime}}).then(function(inv){
+        if (inv && inv.error) throw inv.error;
+        return {rd: inv && inv.data, durl: durl};
+      });
+    });
+  }).then(function(out){
+    var rd = out.rd;
+    if (giftReadIsEmpty(rd)){
+      attachReadPhoto(rd || {}, out.durl);
+      giftReadNote("I couldn't read anything usable from that photo — it's still attached below, and the form works the same as always: fill in what you need and tap Save gift.");
+      return;
+    }
+    applyGiftRead(rd, out.durl);
+  }).catch(function(e){
+    console.error("Gift read failed", e);
+    // The form is never blocked by a failed read: the photo itself
+    // still lands in the gift photo slot (as if it had been picked
+    // there) and every field stays fillable by hand.
+    readFileAsDataUrl(file, function(d){ if (d) attachReadPhoto({}, d); });
+    giftReadNote("That read didn't go through — the reader may be busy, or the photo may not have loaded. Your photo is attached below anyway, and you can fill the form in by hand, same as always.");
+  }).then(finish, finish);
 }
 
 /* ---------- upcoming ---------- */
@@ -2575,6 +2787,11 @@ function init(){
     readFileAsDataUrl($("gfShipFile").files[0], function(d){ giftShipData = d; refreshGiftPhotoPreviews(); });
   });
   $("gfShipRemove").addEventListener("click", function(){ giftShipData = null; refreshGiftPhotoPreviews(); });
+  $("gfReadBtn").addEventListener("click", function(){ $("gfReadFile").click(); });
+  $("gfReadFile").addEventListener("change", function(){
+    var f = $("gfReadFile").files[0];
+    if (f) readGiftPhoto(f);
+  });
   // upcoming
   $("upcomingToggleBtn").addEventListener("click", function(){
     upcomingShowAll = !upcomingShowAll;
