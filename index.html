@@ -1,3 +1,6 @@
+<!-- Gift Keeper — Update #2 (mint heart-tag icons) + photo attach on the
+     💬 Send feedback door (📷 Add a photo, optional; the photo rides to
+     Mary only when the sender taps Send with one attached). -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -569,6 +572,14 @@ var SEASONS = [
         <textarea id="fbMessage" maxlength="4000" placeholder="The package tracking button didn't work on my phone." style="min-height:130px;"></textarea>
         <label for="fbEmail">Your email (optional)</label>
         <input id="fbEmail" type="email" autocomplete="email" placeholder="So she can reply">
+        <label>Photo (optional)</label>
+        <p style="margin-top:2px;"><button class="btn plain" id="fbPhotoBtn" type="button">📷 Add a photo (only if it helps)</button></p>
+        <input id="fbPhotoFile" type="file" accept="image/*" class="hidden">
+        <div id="fbPhotoWrap" class="hidden">
+          <p style="margin:8px 0;"><img id="fbPhotoPreview" alt="The photo you attached" style="max-width:100%;border-radius:12px;border:1.5px solid var(--line);"></p>
+          <p style="margin-top:2px;"><button class="iconbtn" id="fbPhotoRemove" type="button">Take the photo off</button></p>
+        </div>
+        <div id="fbPhotoMsg" class="msg"></div>
         <div id="fbMsg" class="msg"></div>
         <p style="margin-top:14px;"><button class="btn" id="fbSendBtn" type="button">Send feedback</button></p>
       </div>
@@ -1896,15 +1907,143 @@ async function sendFeedback(){
   var inv = await sb.functions.invoke("send-feedback", {body: {
     message: message, from: sender, fromUser: user ? (user.email || "") : "", page: window.location.origin
   }});
-  btn.disabled = false; btn.textContent = "Send feedback";
   if (inv.error){
     console.error("Feedback saved but the email didn't send", inv.error);
     toast("Your message is saved. Marybeth will see it in Gift Keeper. (The email copy didn't go out.)");
   } else {
     toast("Thanks — Marybeth has your message.");
   }
+  // Photo attach (new): the message is saved FIRST, exactly as above —
+  // the photo only ever rides along afterwards, and only because the
+  // sender tapped Send with one attached. A photo that won't go up
+  // never takes the message down with it: the message stays saved,
+  // the sheet stays right here with everything still in it, and a
+  // plain note says the message went through but the photo didn't.
+  if (fbPhotoFile){
+    var photoOk = await sendFeedbackPhoto(message);
+    if (!photoOk){
+      btn.disabled = false; btn.textContent = "Send feedback";
+      showMsg($("fbPhotoMsg"), "Your message went through — the photo didn't. You can try the photo again.");
+      return;
+    }
+    clearFeedbackPhoto();
+  }
+  btn.disabled = false; btn.textContent = "Send feedback";
   $("fbMessage").value = "";
   showView("view-people");
+}
+
+/* ---------- feedback photo attach (rides along with Send feedback) ----------
+   The sender picks a photo if (and only if) it helps show what they
+   mean. It is shrunk on the device, lands in the private help-photos
+   bucket under the sender's own account folder, one row lands in the
+   help_photos table, then send-help-photo emails Mary a link that
+   works for 7 days. Nothing about the plain message flow changes:
+   this runs after the message has already been saved and emailed
+   the usual way. */
+var fbPhotoFile = null; /* the picked photo File - this device only */
+var fbPhotoUrl = "";    /* preview object URL for the picked photo */
+function clearFeedbackPhoto(){
+  fbPhotoFile = null;
+  if (fbPhotoUrl){ try { URL.revokeObjectURL(fbPhotoUrl); } catch(e){} fbPhotoUrl = ""; }
+  var f = $("fbPhotoFile"); if (f) f.value = "";
+  var w = $("fbPhotoWrap"); if (w) w.classList.add("hidden");
+  var i = $("fbPhotoPreview"); if (i) i.removeAttribute("src");
+}
+function pickFeedbackPhoto(file){
+  if (!file) return;
+  fbPhotoFile = file;
+  if (fbPhotoUrl){ try { URL.revokeObjectURL(fbPhotoUrl); } catch(e){} fbPhotoUrl = ""; }
+  try { fbPhotoUrl = URL.createObjectURL(file); } catch(e){ fbPhotoUrl = ""; }
+  if (fbPhotoUrl) $("fbPhotoPreview").src = fbPhotoUrl;
+  $("fbPhotoWrap").classList.remove("hidden");
+}
+function feedbackReadDims(file, cb){
+  // The photo's pixel size, read from the file itself (the same
+  // FileReader path the gift photo uses). On any trouble, hand back
+  // a size that says "small enough" and the original is sent as-is.
+  try {
+    var r = new FileReader();
+    r.onload = function(){
+      try {
+        var img = new Image();
+        img.onload = function(){ cb(img.naturalWidth || img.width || 0, img.naturalHeight || img.height || 0); };
+        img.onerror = function(){ cb(0, 0); };
+        img.src = String(r.result || "");
+      } catch(e){ cb(0, 0); }
+    };
+    r.onerror = function(){ cb(0, 0); };
+    r.readAsDataURL(file);
+  } catch(e){ cb(0, 0); }
+}
+function feedbackDrawPhoto(file, w, h, done){
+  // Re-draw the photo at w x h and hand back a JPEG 0.85 blob; the
+  // decode goes through an <img> (the rotate helpers' way), never
+  // createImageBitmap - older phones may not have it, and the basic
+  // element decode is the path this app already trusts.
+  try {
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function(){
+      try {
+        var c = document.createElement("canvas"); c.width = w; c.height = h;
+        var ctx = c.getContext && c.getContext("2d");
+        if(!ctx || !c.toBlob){ try { URL.revokeObjectURL(url); } catch(e){} done(null); return; }
+        ctx.drawImage(img, 0, 0, w, h);
+        try { URL.revokeObjectURL(url); } catch(e){}
+        c.toBlob(function(b){ done(b || null); }, "image/jpeg", 0.85);
+      } catch(e){ done(null); }
+    };
+    img.onerror = function(){ try { URL.revokeObjectURL(url); } catch(e){} done(null); };
+    img.src = url;
+  } catch(e){ done(null); }
+}
+function feedbackPrepPhoto(file){
+  // Shrink to a 1600px long edge, JPEG 0.85 - a smaller photo uploads
+  // faster and shows just as well. Any trouble at all here just sends
+  // the original photo: getting ready can never block the send.
+  return new Promise(function(resolve){
+    try {
+      if(!file || !file.size){ resolve(file); return; }
+      var done = function(b){ resolve(b || file); };
+      feedbackReadDims(file, function(w, h){
+        try {
+          // Small enough already, and a friendly type: untouched.
+          var type = String(file.type || "").toLowerCase();
+          if(w > 0 && h > 0 && Math.max(w, h) <= 1600 && (type === "image/jpeg" || type === "image/png") && file.size <= 1258291){ done(file); return; }
+          if(!(w > 0 && h > 0)){ done(file); return; } // size unknown: never guess, send the original
+          // One decode, one canvas pass - the Buddy door's rule: if a
+          // shrunk copy comes back under 200 bytes, the original goes.
+          var scale = Math.min(1, 1600 / Math.max(w, h));
+          var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+          feedbackDrawPhoto(file, cw, ch, function(b){
+            if(b && b.size >= 200 && b.size <= Math.max(file.size, 1)) done(b); else done(file);
+          });
+        } catch(e){ done(file); }
+      });
+    } catch(e){ resolve(file); }
+  });
+}
+async function sendFeedbackPhoto(message){
+  var email = user && user.email ? String(user.email).toLowerCase() : null;
+  try {
+    var blob = await feedbackPrepPhoto(fbPhotoFile);
+    var path = user.id + "/" + Date.now() + ".jpg";
+    var up = await sb.storage.from("help-photos").upload(path, blob, {contentType: (blob && blob.type) || "image/jpeg"});
+    if (up && up.error) throw up.error;
+    var row = await sb.from("help_photos").insert({
+      user_id: user.id, user_email: email, note: message, photo_path: path
+    });
+    if (row && row.error) throw row.error;
+    var inv = await sb.functions.invoke("send-help-photo", {body: {
+      photo_path: path, note: message, user_email: email
+    }});
+    if (inv && inv.error) throw inv.error;
+    return true;
+  } catch(e){
+    console.error("Feedback photo didn't send", e);
+    return false;
+  }
 }
 
 /* ---------- settings ---------- */
@@ -2416,6 +2555,9 @@ function init(){
   $("impSaveBtn").addEventListener("click", saveImport);
   // feedback
   $("fbSendBtn").addEventListener("click", sendFeedback);
+  $("fbPhotoBtn").addEventListener("click", function(){ $("fbPhotoFile").click(); });
+  $("fbPhotoFile").addEventListener("change", function(){ pickFeedbackPhoto($("fbPhotoFile").files[0]); });
+  $("fbPhotoRemove").addEventListener("click", clearFeedbackPhoto);
   // settings: lock
   $("lockToggle").addEventListener("change", function(){
     if ($("lockToggle").checked) $("lockSetup").classList.remove("hidden");
