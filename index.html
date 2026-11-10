@@ -382,6 +382,7 @@ var SEASONS = [
       <div class="card">
         <h2 id="pdGiftsTitle">Gifts</h2>
         <p class="muted" id="pdSpent"></p>
+        <p><button class="btn plain" id="pdWishBtn" type="button">📷 Load a wish list from a photo</button></p>
         <div id="pdGifts"></div>
       </div>
       <div class="card">
@@ -407,8 +408,11 @@ var SEASONS = [
           <p id="gfReadText" style="margin:0;"></p>
           <p id="gfSendMaryWrap" class="hidden" style="margin:10px 0 2px;"><button class="btn plain" id="gfSendMaryBtn" type="button">Can't read it? Send this photo to Mary</button></p>
         </div>
+        <p style="margin:10px 0 2px;"><button class="btn plain" id="gfWishBtn" type="button">📋 Or load a whole wish list from one photo</button></p>
         <label for="gfPerson">Who is it for? *</label>
-        <select id="gfPerson"></select>
+        <select id="gfPerson" class="hidden"></select>
+        <div class="seg" id="gfPeopleSeg"></div>
+        <p class="small muted" id="gfPersonHint" style="margin:6px 0 0;"></p>
         <label for="gfName">Gift name *</label>
         <input id="gfName" type="text" placeholder="For example: heated neck wrap">
         <label for="gfOccasion">Occasion</label>
@@ -418,6 +422,13 @@ var SEASONS = [
             <label for="gfPrice">Price in dollars</label>
             <input id="gfPrice" type="text" inputmode="decimal" placeholder="24.50">
           </div>
+        </div>
+        <div id="gfSplitWrap" class="hidden">
+          <label>One gift for more than one person — how should the price count?</label>
+          <div class="seg" id="gfSplitSeg"></div>
+          <p class="small muted" id="gfSplitNote" style="margin:6px 0 0;"></p>
+        </div>
+        <div class="btnrow" style="display:none;">
           <div style="flex:1 1 160px;">
             <label for="gfDate">Purchase date</label>
             <input id="gfDate" type="date">
@@ -451,6 +462,38 @@ var SEASONS = [
         <div id="gfMsg" class="msg"></div>
         <p style="margin-top:16px;"><button class="btn" id="giftSaveBtn" type="button">Save gift</button></p>
         <p id="giftDeleteWrap" class="hidden"><button class="btn danger" id="giftDeleteBtn" type="button">Delete this gift</button></p>
+      </div>
+    </section>
+
+    <!-- ===== WISH LIST (load from one photo) ===== -->
+    <section id="view-wishlist" class="hidden">
+      <p><button class="iconbtn" id="wlBackBtn" type="button">← Back</button></p>
+      <div class="card">
+        <h1>📷 Load a wish list</h1>
+        <p class="small muted" style="margin-top:0;">One photo of the whole list — handwritten or printed — and Gift Keeper reads every line into wishes for one person. Nothing is saved by the read: you check every line, fix anything, then tap Save. Each wish lands as a “thinking” gift you can check off as you buy it.</p>
+        <label for="wlPerson">Whose wish list is this? *</label>
+        <select id="wlPerson"></select>
+        <label for="wlOccasion">Occasion</label>
+        <select id="wlOccasion"></select>
+        <p><button class="btn" id="wlPickBtn" type="button">📷 Take or pick the list photo</button></p>
+        <input id="wlFile" type="file" accept="image/*" class="hidden">
+        <div id="wlNote" class="hidden" style="background:var(--green-soft);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0;">
+          <p id="wlText" style="margin:0;"></p>
+          <p id="wlSendMaryWrap" class="hidden" style="margin:10px 0 2px;"><button class="btn plain" id="wlSendMaryBtn" type="button">Can't read it? Send this photo to Mary</button></p>
+        </div>
+        <img id="wlPhotoPrev" class="preview hidden" alt="The wish list photo">
+        <div id="wlReview" class="hidden">
+          <h3>Check the list</h3>
+          <p class="small muted">Fix any line, tap ✕ to drop one, and add anything the photo missed. The photo itself is kept on the first wish in the list, so you can look at the paper again any time.</p>
+          <div id="wlRows"></div>
+          <p><button class="btn plain" id="wlAddBtn" type="button">＋ Add another item</button></p>
+          <div id="wlSkippedWrap" class="hidden">
+            <h4 style="margin-bottom:4px;">Crossed out on the paper — left off on purpose</h4>
+            <div id="wlSkipped" class="small muted"></div>
+          </div>
+          <div id="wlMsg" class="msg"></div>
+          <p style="margin-top:16px;"><button class="btn" id="wlSaveBtn" type="button">Save wishes</button></p>
+        </div>
       </div>
     </section>
 
@@ -1333,7 +1376,7 @@ function giftById(id){
 function isOwner(){ return !!user && !!user.email && user.email.toLowerCase() === OWNER_EMAIL; }
 
 /* ---------- navigation ---------- */
-var VIEWS = ["view-people","view-person","view-person-form","view-gift-form","view-upcoming",
+var VIEWS = ["view-people","view-person","view-person-form","view-gift-form","view-wishlist","view-upcoming",
              "view-notifications","view-budget","view-archived","view-import","view-feedback",
              "view-settings","view-admin","view-privacy","view-terms"];
 var lastListView = "view-people";
@@ -1361,6 +1404,114 @@ function setSeg(segEl, attr, val){
     b.classList.toggle("on", b.getAttribute(attr) === val);
   });
 }
+/* ---------- gift form: who it is for (one tap, or several) ----------
+   Jessica's ask (2026-11-10): her girls sometimes get the SAME
+   gift, and the old one-person dropdown made her type the whole
+   gift once per girl. The picker is now a row of name chips —
+   tap one, or tap several. The hidden gfPerson select stays the
+   source of truth its readers already know: its value is always
+   the FIRST picked person (or "" when nobody is picked), and the
+   picked set lives on the chips. Saving in add mode files one
+   separate copy of the gift under each picked person, in a single
+   update() call. In edit mode the chips lock to the gift's own
+   person — an edit still touches only that one copy. */
+function gfSetPicked(ids){
+  var seg = $("gfPeopleSeg");
+  Array.prototype.forEach.call(seg.querySelectorAll("button"), function(b){
+    b.classList.toggle("on", ids.indexOf(b.getAttribute("data-person")) >= 0);
+  });
+  syncGfPersonSelect();
+  gfSyncSplit();
+}
+function gfPickedIds(){
+  var ids = [];
+  Array.prototype.forEach.call($("gfPeopleSeg").querySelectorAll("button.on"), function(b){
+    ids.push(b.getAttribute("data-person"));
+  });
+  return ids;
+}
+function syncGfPersonSelect(){
+  var ids = gfPickedIds();
+  $("gfPerson").value = ids.length ? ids[0] : "";
+}
+function gfPickPerson(id){
+  gfSetPicked(id ? [id] : []);
+}
+/* The one place besides the chips that sets who a gift is for:
+   the photo reader's matched recipient. Single-picks that person
+   through the same path the chips use, returns true when picked. */
+function gfApplyRecipientPick(id){
+  if (!id) return false;
+  gfPickPerson(id);
+  return $("gfPerson").value === id;
+}
+function gfFirstPicked(){
+  var ids = gfPickedIds();
+  return ids.length ? ids[0] : ($("gfPerson").value || "");
+}
+function gfLockPeople(lock){
+  $("gfPeopleSeg").querySelectorAll("button").forEach(function(b){ b.disabled = !!lock; });
+  $("gfPersonHint").textContent = lock
+    ? "Editing changes only this person's copy — the same gift saved for somebody else keeps its own details."
+    : "Tap a name — or tap two or more when the same gift is for more than one person. You type it once; it saves under each name you tapped.";
+}
+/* The price choice, shown only when two or more people are
+   picked: "Each pays full price" (the gift was bought once per
+   person — the way hand-entering it for each of them counted) or
+   "Split it between them" (ONE shared gift, bought once — a dream
+   house for both girls — so each copy carries a share and the
+   copies together count exactly what was paid, no more). */
+function gfSplitMode(){
+  var v = segVal($("gfSplitSeg"), "data-split");
+  return v === "split" ? "split" : "full";
+}
+function gfSplitPrices(total, n){
+  var cents = Math.round((Number(total) || 0) * 100);
+  var share = Math.floor(cents / n);
+  var out = [];
+  for (var i = 0; i < n; i++){
+    var c = i === 0 ? cents - share * (n - 1) : share;
+    out.push(Number((c / 100).toFixed(2)));
+  }
+  return out;
+}
+function gfSplitNoteUpdate(){
+  var n = gfPickedIds().length;
+  var price = Number($("gfPrice").value) || 0;
+  var dollars = "$" + price.toFixed(2);
+  $("gfSplitNote").textContent = gfSplitMode() === "split"
+    ? (price > 0
+      ? "One gift, bought once: " + dollars + " split between the " + n + " of them — together it still counts " + dollars + " spent, not " + n + " times that."
+      : "One gift, bought once: its price is split between them, so together it counts once.")
+    : "Bought one each: the full price counts for every person — the way typing it in for each of them did.";
+}
+function gfSyncSplit(){
+  var show = !editingGiftId && gfPickedIds().length > 1;
+  $("gfSplitWrap").classList.toggle("hidden", !show);
+  if (show) gfSplitNoteUpdate();
+}
+function buildGfSplitSeg(){
+  buildSeg($("gfSplitSeg"), "data-split",
+    [{value: "full", label: "Each pays full price"}, {value: "split", label: "Split it between them"}],
+    "full");
+  wireSeg($("gfSplitSeg"), "data-split", function(){ gfSplitNoteUpdate(); });
+}
+function buildGfPeopleChips(folks, pickedIds, lock){
+  var seg = $("gfPeopleSeg");
+  buildSeg(seg, "data-person", folks.map(function(p){ return {value: p.id, label: p.name}; }), "__gf_none__");
+  Array.prototype.forEach.call(seg.querySelectorAll("button"), function(b){
+    b.addEventListener("click", function(){
+      var ids = gfPickedIds(), id = b.getAttribute("data-person");
+      if (ids.indexOf(id) >= 0) ids = ids.filter(function(x){ return x !== id; });
+      else ids.push(id);
+      gfSetPicked(ids);
+      fillOccasionSelect(gfFirstPicked(), "");
+    });
+  });
+  gfSetPicked(pickedIds || []);
+  gfLockPeople(!!lock);
+}
+
 function segVal(segEl, attr){
   var on = segEl.querySelector("button.on");
   return on ? on.getAttribute(attr) : null;
@@ -1753,10 +1904,12 @@ function openGiftForm(giftId, personId){
     return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>';
   }).join("");
   var pid = g ? g.personId : (personId || (folks[0] && folks[0].id) || "");
+  if (g) buildGfPeopleChips(state.people, [g.personId], true);
+  else buildGfPeopleChips(folks, pid ? [pid] : [], false);
   if (pid) $("gfPerson").value = pid;
   $("giftFormTitle").textContent = g ? "Edit gift" : "Add a gift";
   $("gfName").value = g ? (g.name || "") : "";
-  fillOccasionSelect(pid, g ? (g.occasionLabel || "") : ((personById(pid) || {occasions: []}).occasions[0] || {}).label || "");
+  fillOccasionSelect(gfFirstPicked(), g ? (g.occasionLabel || "") : ((personById(pid) || {occasions: []}).occasions[0] || {}).label || "");
   $("gfPrice").value = g ? String(g.price != null ? g.price : "") : "";
   $("gfDate").value = g ? (g.boughtOn || "") : todayISO();
   $("gfHiding").value = g ? (g.hidingPlace || "") : "";
@@ -1768,6 +1921,8 @@ function openGiftForm(giftId, personId){
   giftPhotoData = g ? (g.photo != null ? g.photo : null) : null;
   giftShipData = g ? (g.shippingPhoto != null ? g.shippingPhoto : null) : null;
   refreshGiftPhotoPreviews();
+  buildGfSplitSeg();
+  gfSyncSplit();
   fillCarrierSelect(g ? (g.carrier || "") : "");
   $("gfTracking").value = g ? (g.trackingNumber || "") : "";
   $("giftDeleteWrap").classList.toggle("hidden", !g);
@@ -1787,13 +1942,17 @@ function readFileAsDataUrl(file, cb){
   r.onload = function(){ cb(typeof r.result === "string" ? r.result : null); };
   r.readAsDataURL(file);
 }
+/* Multi-person save (2026-11-10): in add mode, saveGift files one
+   copy of the gift per person picked on the chips — see M6 in the
+   gift-keeper-multi-person build notes. Edit mode is unchanged. */
 function saveGift(){
   var name = $("gfName").value.trim();
-  var pid = $("gfPerson").value;
+  var pids = editingGiftId ? [] : gfPickedIds();
+  var pid = editingGiftId ? $("gfPerson").value : (pids[0] || "");
   var priceStr = $("gfPrice").value;
   var msg = $("gfMsg"); hideMsg(msg);
   if (!name){ showMsg(msg, "Give the gift a short name, like \u201Clavender soap\u201D."); return; }
-  if (!pid){ showMsg(msg, "Choose who this gift is for."); return; }
+  if (!pid){ showMsg(msg, "Tap the name of who this gift is for — tap two names if it is for two people."); return; }
   if (priceStr !== "" && isNaN(Number(priceStr))){ showMsg(msg, "The price should be a number, like 24.50."); return; }
   var status = segVal($("gfStatusSeg"), "data-status") || "purchased";
   var fields = {
@@ -1813,6 +1972,16 @@ function saveGift(){
       })});
     }, true);
     toast("Gift updated.");
+  } else if (pids.length > 1) {
+    var stamp = Date.now();
+    var prices = gfSplitMode() === "split" ? gfSplitPrices(fields.price, pids.length) : pids.map(function(){ return fields.price; });
+    var made = pids.map(function(pp, ix){
+      return Object.assign({id: "g-" + stamp + "-" + ix, trackingStatus: "", trackingUpdatedAt: ""}, fields, {personId: pp, price: prices[ix]});
+    });
+    update(function(s){
+      return Object.assign({}, s, {gifts: made.concat(s.gifts)});
+    }, true);
+    toast("Saved for " + pids.length + " people \u{1F49A}");
   } else {
     var gift = Object.assign({id: "g-" + Date.now(), trackingStatus: "", trackingUpdatedAt: ""}, fields);
     update(function(s){
@@ -1941,7 +2110,7 @@ function applyGiftRead(r, dataUrl){
     }
     if (matchedPerson){
       if ($("gfPerson").value !== matchedPerson.id){
-        $("gfPerson").value = matchedPerson.id;
+        gfApplyRecipientPick(matchedPerson.id);
         fillOccasionSelect(matchedPerson.id, "");
       }
       filled.push("who it's for (" + matchedPerson.name + ")");
@@ -2035,6 +2204,284 @@ function readGiftPhoto(file){
     giftReadNote("That read didn't go through — the reader may be busy, or the photo may not have loaded. Your photo is attached below anyway, and you can fill the form in by hand, same as always.");
     giftSendMaryShow();
   }).then(finish, finish);
+}
+
+/* ---------- load a wish list from one photo (2026-11-10) ----------
+   One photo of a whole wish list — handwritten or printed — read
+   by the same read-gift door in its list mode, into a REVIEW list
+   of wishes for ONE person. Nothing is saved by the read: the
+   person checks every line, fixes or drops lines, adds lines the
+   photo missed, and only the Save button writes — through the
+   same update() funnel as every other save, so the cloud copy
+   and the save indicator behave exactly as always. Every saved
+   wish lands as a "thinking" gift, the same shape as an idea
+   typed by hand, and checks off with the same Mark buttons on
+   the person's page. The person is picked from your own people
+   and only ever defaults to the person whose page you came
+   from — a read never creates a person. The list photo itself
+   (the downsized copy the reader saw) is kept on the FIRST
+   saved wish, in its gift photo slot and marked in its note,
+   so the paper list can be looked at again later. A read that
+   fails or finds no lines never blocks anything: the photo is
+   shown, the list can be typed in line by line, and the photo
+   can be sent to Mary through the feedback door, like the
+   single-gift reader's fallback. */
+var wishBusy = false;
+var wishPhotoDataUrl = "";
+var wishBackPersonId = "";
+function wishNote(text){
+  var n = $("wlNote"), t = $("wlText");
+  if (!n || !t) return;
+  if (!text){ n.classList.add("hidden"); t.textContent = ""; return; }
+  t.textContent = text;
+  n.classList.remove("hidden");
+}
+function wishSendMaryShow(){
+  var w = $("wlSendMaryWrap");
+  if (w) w.classList.toggle("hidden", !wishPhotoDataUrl);
+}
+function fillWishOccasionSelect(personId, current){
+  // The gift form's occasion choices, for the wish list's own
+  // select: the person's occasions first, then the holidays.
+  var p = personById(personId);
+  var labels = p ? p.occasions.map(function(o){ return o.label; }) : [];
+  var html = "";
+  if (!labels.length) html += '<option value="">Any occasion</option>';
+  labels.forEach(function(l){ html += '<option value="' + esc(l) + '"' + (l === current ? " selected" : "") + '>' + esc(l) + '</option>'; });
+  html += '<optgroup label="Holidays">';
+  HOLIDAYS.forEach(function(h){
+    if (labels.indexOf(h.label) < 0) html += '<option value="' + esc(h.label) + '"' + (h.label === current ? " selected" : "") + '>' + esc(h.label) + '</option>';
+  });
+  html += '</optgroup>';
+  if (current && labels.indexOf(current) < 0 && !HOLIDAYS.some(function(h){ return h.label === current; })){
+    html = '<option value="' + esc(current) + '" selected>' + esc(current) + '</option>' + html;
+  }
+  $("wlOccasion").innerHTML = html;
+  if (current) $("wlOccasion").value = current;
+}
+function openWishList(personId){
+  var folks = state.people.filter(function(p){ return !p.archived; });
+  if (!folks.length){
+    toast("Add the person first — then their wish list has a home.");
+    showView("view-people");
+    return;
+  }
+  wishPhotoDataUrl = "";
+  wishBackPersonId = personId || currentPersonId || "";
+  var back = wishBackPersonId ? personById(wishBackPersonId) : null;
+  var pid = back && !back.archived ? back.id : folks[0].id;
+  $("wlPerson").innerHTML = folks.map(function(p){
+    return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>';
+  }).join("");
+  $("wlPerson").value = pid;
+  fillWishOccasionSelect(pid, "Christmas");
+  $("wlRows").innerHTML = "";
+  $("wlReview").classList.add("hidden");
+  $("wlSkipped").innerHTML = "";
+  $("wlSkippedWrap").classList.add("hidden");
+  $("wlPhotoPrev").classList.add("hidden");
+  $("wlPhotoPrev").removeAttribute("src");
+  hideMsg($("wlMsg"));
+  wishNote("Pick the photo of the whole list — one photo does it. I'll read every line, then you check them before anything is saved.");
+  wishSendMaryShow();
+  showView("view-wishlist");
+}
+function wishRowEl(item){
+  var row = document.createElement("div");
+  row.className = "giftrow";
+  row.setAttribute("style", "display:flex;gap:8px;align-items:flex-start;");
+  var left = document.createElement("div");
+  left.setAttribute("style", "flex:1;min-width:0;");
+  var name = document.createElement("input");
+  name.type = "text";
+  name.className = "wlName";
+  name.value = item && item.name ? item.name : "";
+  name.setAttribute("placeholder", "What is the wish?");
+  name.addEventListener("input", updateWishSaveLabel);
+  left.appendChild(name);
+  var note = document.createElement("input");
+  note.type = "text";
+  note.className = "wlItemNote";
+  note.value = item && item.note ? item.note : "";
+  note.setAttribute("placeholder", "Note (optional)");
+  left.appendChild(note);
+  if (item && item.unsure){
+    var flag = document.createElement("div");
+    flag.className = "small";
+    flag.setAttribute("style", "color:#8a6d00;margin-top:2px;");
+    flag.textContent = "⚠ I wasn't sure about this line — check it against the paper.";
+    left.appendChild(flag);
+  }
+  var del = document.createElement("button");
+  del.type = "button";
+  del.className = "iconbtn";
+  del.textContent = "✕";
+  del.setAttribute("aria-label", "Remove this line");
+  del.addEventListener("click", function(){
+    if (row.parentNode) row.parentNode.removeChild(row);
+    updateWishSaveLabel();
+  });
+  row.appendChild(left);
+  row.appendChild(del);
+  return row;
+}
+function wishRowsData(){
+  var out = [];
+  Array.prototype.forEach.call($("wlRows").querySelectorAll(".giftrow"), function(row){
+    var n = row.querySelector(".wlName"), t = row.querySelector(".wlItemNote");
+    out.push({name: n ? n.value.trim() : "", note: t ? t.value.trim() : ""});
+  });
+  return out;
+}
+function updateWishSaveLabel(){
+  var n = wishRowsData().filter(function(r){ return r.name; }).length;
+  var p = personById($("wlPerson").value);
+  $("wlSaveBtn").textContent = "Save " + n + (n === 1 ? " wish" : " wishes") + (p ? " to " + p.name.split(" ")[0] : "");
+}
+function wishReadSummaryText(rd, nWishes, nUnsure, nSkipped){
+  var text = "📸 Read from your photo" + (rd.cached ? " (this photo was read before, so this one was free)" : "") + " — nothing is saved yet.";
+  text += " I found " + nWishes + (nWishes === 1 ? " wish" : " wishes") + " on the list.";
+  if (nUnsure) text += " " + nUnsure + (nUnsure === 1 ? " line wasn't" : " lines weren't") + " fully clear — marked ⚠ below, so check those against the paper.";
+  if (nSkipped) text += " " + nSkipped + (nSkipped === 1 ? " line was" : " lines were") + " crossed out on the paper, so I left " + (nSkipped === 1 ? "it" : "them") + " off — named under the list so you can see.";
+  text += " Check every line, fix anything, then tap Save.";
+  return text;
+}
+function applyWishRead(rd, durl){
+  wishPhotoDataUrl = durl || "";
+  if (wishPhotoDataUrl){
+    $("wlPhotoPrev").src = wishPhotoDataUrl;
+    $("wlPhotoPrev").classList.remove("hidden");
+  } else {
+    $("wlPhotoPrev").classList.add("hidden");
+    $("wlPhotoPrev").removeAttribute("src");
+  }
+  var items = Array.isArray(rd.items) ? rd.items : [];
+  var unsureLines = Array.isArray(rd.unsure_lines) ? rd.unsure_lines.filter(function(s){ return typeof s === "string" && s.trim(); }) : [];
+  var box = $("wlRows");
+  box.innerHTML = "";
+  items.forEach(function(it){
+    box.appendChild(wishRowEl({name: it && it.name ? String(it.name) : "", note: it && it.note ? String(it.note) : "", unsure: !!(it && it.unsure)}));
+  });
+  unsureLines.forEach(function(line){
+    box.appendChild(wishRowEl({name: line.trim(), note: "", unsure: true}));
+  });
+  var skipped = Array.isArray(rd.skipped) ? rd.skipped.filter(function(s){ return typeof s === "string" && s.trim(); }) : [];
+  if (skipped.length){
+    $("wlSkipped").innerHTML = skipped.map(function(s){ return "<div>✕ " + esc(s) + "</div>"; }).join("");
+    $("wlSkippedWrap").classList.remove("hidden");
+  } else {
+    $("wlSkipped").innerHTML = "";
+    $("wlSkippedWrap").classList.add("hidden");
+  }
+  $("wlReview").classList.remove("hidden");
+  var nUnsure = items.filter(function(it){ return it && it.unsure; }).length + unsureLines.length;
+  wishNote(wishReadSummaryText(rd, items.length + unsureLines.length, nUnsure, skipped.length));
+  wishSendMaryShow();
+  updateWishSaveLabel();
+}
+function readWishPhoto(file){
+  if (!file || wishBusy) return;
+  wishBusy = true;
+  var btn = $("wlPickBtn"), oldLabel = btn ? btn.textContent : "";
+  if (btn){ btn.disabled = true; btn.textContent = "Reading…"; }
+  wishNote("Reading your photo…");
+  var prepDurl = "";
+  var finish = function(){
+    wishBusy = false;
+    if (btn){ btn.disabled = false; btn.textContent = oldLabel; }
+    var f = $("wlFile"); if (f) f.value = "";
+  };
+  feedbackPrepPhoto(file).then(function(blob){
+    var mime = (blob && blob.type) || file.type || "image/jpeg";
+    return giftBlobToDataUrl(blob).then(function(durl){
+      if (!durl) throw new Error("That photo could not be opened.");
+      prepDurl = durl;
+      var i = durl.indexOf(",");
+      var b64 = i >= 0 ? durl.slice(i + 1) : durl;
+      return sb.functions.invoke("read-gift", {body: {image_base64: b64, mime_type: mime, mode: "list"}}).then(function(inv){
+        if (inv && inv.error) throw inv.error;
+        return {rd: inv && inv.data, durl: durl};
+      });
+    });
+  }).then(function(out){
+    var rd = out.rd || {};
+    var items = Array.isArray(rd.items) ? rd.items : [];
+    var unsureLines = Array.isArray(rd.unsure_lines) ? rd.unsure_lines.filter(function(s){ return typeof s === "string" && s.trim(); }) : [];
+    if (!items.length && !unsureLines.length){
+      // The reader found no lines at all: the photo stays on
+      // screen, the (empty) review opens so the list can be
+      // typed in by hand, and the send-to-Mary door is shown.
+      wishPhotoDataUrl = out.durl;
+      $("wlPhotoPrev").src = out.durl;
+      $("wlPhotoPrev").classList.remove("hidden");
+      $("wlRows").innerHTML = "";
+      $("wlSkipped").innerHTML = "";
+      $("wlSkippedWrap").classList.add("hidden");
+      $("wlReview").classList.remove("hidden");
+      updateWishSaveLabel();
+      wishNote("I couldn't read any list lines from that photo — it's shown below so you can type the list in with ＋ Add another item, and the Send this photo to Mary button is right here if you'd like her eyes on it instead.");
+      wishSendMaryShow();
+      return;
+    }
+    applyWishRead(rd, out.durl);
+  }).catch(function(e){
+    console.error("Wish list read failed", e);
+    // A failed read never blocks the list: the photo (the copy
+    // the reader was about to see) is shown, the list can be
+    // typed in by hand, and the photo can be sent to Mary.
+    if (prepDurl){
+      wishPhotoDataUrl = prepDurl;
+      $("wlPhotoPrev").src = prepDurl;
+      $("wlPhotoPrev").classList.remove("hidden");
+    }
+    if (!$("wlRows").children.length) $("wlReview").classList.remove("hidden");
+    updateWishSaveLabel();
+    wishNote("That read didn't go through — the reader may be busy, or the photo may not have loaded. You can type the list in with ＋ Add another item, or send the photo to Mary.");
+    wishSendMaryShow();
+  }).then(finish, finish);
+}
+function saveWishList(){
+  var msg = $("wlMsg"); hideMsg(msg);
+  var pid = $("wlPerson").value;
+  var p = personById(pid);
+  if (!p){ showMsg(msg, "Pick whose list this is first."); return; }
+  var kept = wishRowsData().filter(function(r){ return r.name; });
+  if (!kept.length){ showMsg(msg, "Add at least one wish first — type a line, or load a photo."); return; }
+  var occ = $("wlOccasion").value || "Any occasion";
+  var base = Date.now();
+  var made = kept.map(function(r, i){
+    var idea = r.note || "";
+    if (i === 0 && wishPhotoDataUrl) idea = idea ? idea + " (wish list photo)" : "Wish list photo";
+    return Object.assign({id: "g-" + (base + i), trackingStatus: "", trackingUpdatedAt: ""}, {
+      personId: pid, name: r.name, idea: idea, price: 0, boughtOn: "",
+      occasionLabel: occ, hidingPlace: "Not hidden yet", status: "thinking",
+      photo: i === 0 ? (wishPhotoDataUrl || null) : null, shippingPhoto: null,
+      carrier: "", trackingNumber: ""
+    });
+  });
+  update(function(s){
+    return Object.assign({}, s, {gifts: made.concat(s.gifts)});
+  }, true);
+  toast(made.length + (made.length === 1 ? " wish" : " wishes") + " saved to " + p.name.split(" ")[0] + " 💚");
+  openPerson(pid);
+}
+function carryWishPhotoToFeedback(){
+  // The wish list photo's own "send it to Mary" door, riding the
+  // same feedback path as the gift form's: the photo is carried
+  // over already attached, with a starter sentence waiting in a
+  // message box that is still empty — words somebody typed are
+  // never replaced.
+  var dataUrl = wishPhotoDataUrl || "";
+  var box = $("fbMessage");
+  if (box && !box.value.trim())
+    box.value = "Gift Keeper couldn't read this wish list photo — could you look at it for me?";
+  showView("view-feedback");
+  if (!dataUrl) return;
+  if (fbGiftCarryDataUrl === dataUrl && fbPhotoFile) return;
+  fbGiftCarryDataUrl = dataUrl;
+  dataUrlToFeedbackFile(dataUrl).then(function(file){
+    if (file && fbGiftCarryDataUrl === dataUrl) pickFeedbackPhoto(file);
+  });
 }
 
 /* ---------- upcoming ---------- */
@@ -3082,14 +3529,16 @@ function init(){
   });
   // gift form
   $("giftFormBack").addEventListener("click", function(){
-    var pid = $("gfPerson").value || currentPersonId;
+    var pid = gfFirstPicked() || currentPersonId;
     if (pid && personById(pid)) openPerson(pid); else showView("view-people");
   });
   $("gfPerson").addEventListener("change", function(){
-    var p = personById($("gfPerson").value);
-    fillOccasionSelect($("gfPerson").value, p && p.occasions[0] ? p.occasions[0].label : "");
+    var first = gfFirstPicked();
+    var p = personById(first);
+    fillOccasionSelect(first, p && p.occasions[0] ? p.occasions[0].label : "");
   });
   $("giftSaveBtn").addEventListener("click", saveGift);
+  $("gfPrice").addEventListener("input", function(){ if (!$("gfSplitWrap").classList.contains("hidden")) gfSplitNoteUpdate(); });
   $("giftDeleteBtn").addEventListener("click", deleteGiftFromForm);
   $("gfPhotoBtn").addEventListener("click", function(){ $("gfPhotoFile").click(); });
   $("gfPhotoFile").addEventListener("change", function(){
@@ -3107,6 +3556,27 @@ function init(){
     if (f) readGiftPhoto(f);
   });
   $("gfSendMaryBtn").addEventListener("click", carryGiftPhotoToFeedback);
+  $("pdWishBtn").addEventListener("click", function(){ openWishList(currentPersonId); });
+  $("gfWishBtn").addEventListener("click", function(){ openWishList(gfFirstPicked() || currentPersonId); });
+  $("wlPickBtn").addEventListener("click", function(){ $("wlFile").click(); });
+  $("wlFile").addEventListener("change", function(){
+    var f = $("wlFile").files[0];
+    if (f) readWishPhoto(f);
+  });
+  $("wlPerson").addEventListener("change", function(){
+    fillWishOccasionSelect($("wlPerson").value, "Christmas");
+    updateWishSaveLabel();
+  });
+  $("wlAddBtn").addEventListener("click", function(){
+    $("wlRows").appendChild(wishRowEl(null));
+    updateWishSaveLabel();
+  });
+  $("wlSaveBtn").addEventListener("click", saveWishList);
+  $("wlBackBtn").addEventListener("click", function(){
+    if (wishBackPersonId && personById(wishBackPersonId)) openPerson(wishBackPersonId);
+    else showView("view-people");
+  });
+  $("wlSendMaryBtn").addEventListener("click", carryWishPhotoToFeedback);
   // upcoming
   $("upcomingToggleBtn").addEventListener("click", function(){
     upcomingShowAll = !upcomingShowAll;
