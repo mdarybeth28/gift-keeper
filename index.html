@@ -27,6 +27,8 @@
        max-width:760px;margin:0 auto;padding:14px 16px 0;}
   .brand{font-size:1.45rem;font-weight:800;color:var(--green-dark);}
   .brand small{display:block;font-size:.82rem;font-weight:600;color:var(--muted);}
+  #saveStatus{font-size:.75rem;color:var(--muted);}
+  #saveStatus.bad{color:var(--warn);}
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
        padding:18px;margin:14px 0;box-shadow:0 1px 3px rgba(60,50,20,.06);}
   h1{font-size:1.6rem;margin:.2em 0 .4em;}
@@ -175,10 +177,7 @@ var SEASONS = [
     </div>
     <div class="card">
       <h2>Already have Gift Keeper?</h2>
-      <div class="btnrow">
-        <button class="btn" id="frontSignInBtn" type="button">Sign in</button>
-        <button class="btn secondary" id="frontRequestBtn" type="button">Request access</button>
-      </div>
+      <p><button class="btn" id="frontSignInBtn" type="button">Sign in</button></p>
       <p class="small muted" style="margin-top:12px;">First time: open your sign-in link in Safari or Chrome. Don't save Gift Keeper as a home-screen icon — those forget you.</p>
     </div>
     <div class="footlinks noprint">
@@ -201,7 +200,6 @@ var SEASONS = [
       <div class="tabs">
         <button id="tabSignIn" class="on" type="button">Sign in</button>
         <button id="tabNew" type="button">I'm new here</button>
-        <button id="tabRequest" type="button">Request access</button>
       </div>
 
       <div id="signInPane">
@@ -226,13 +224,6 @@ var SEASONS = [
         <p style="margin-top:16px;"><button class="btn" id="createBtn" type="button">Create my password</button></p>
       </div>
 
-      <div id="requestPane" class="hidden">
-        <p class="muted">Ask here, and Marybeth will let you in by hand — usually the same day. (Already paid? You don't need this — paying lets you in by itself.) Use the same email you'll sign in with.</p>
-        <label for="rqEmail">Email</label>
-        <input id="rqEmail" type="email" autocomplete="email" placeholder="you@example.com">
-        <div id="rqMsg" class="msg"></div>
-        <p style="margin-top:16px;"><button class="btn" id="requestBtn" type="button">Request access</button></p>
-      </div>
     </div>
     <div class="footlinks noprint">
       <button id="authPrivacyBtn" type="button">Privacy</button> ·
@@ -265,9 +256,8 @@ var SEASONS = [
     <div class="card" style="margin-top:30px;">
       <div class="big-emoji">🎁</div>
       <h1>Gift Keeper is private</h1>
-      <p id="gateText">This email isn't on the approved list yet. Just paid? Give it a minute, then sign out and sign back in with the email you paid with. Haven't paid? Ask for access and Marybeth will take care of it, usually the same day.</p>
-      <div id="gateMsg" class="msg"></div>
-      <p><button class="btn" id="gateRequestBtn" type="button">Request access</button></p>
+      <p id="gateText">This email isn't on the approved list yet. Just paid? Give it a minute, then sign out and sign back in with the email you paid with. Haven't paid yet? Gift Keeper is $15.99 a year — tap Get Gift Keeper below, check out with this same email, and paying lets you in by itself.</p>
+      <p><a class="btn" id="gateBuyBtn" href="https://buy.stripe.com/14A9AT2O26mPfSd8030ZW04">Get Gift Keeper — $15.99 a year</a></p>
       <p class="center"><button class="iconbtn" id="gateSignOutBtn" type="button">Sign out</button></p>
     </div>
   </div>
@@ -276,7 +266,7 @@ var SEASONS = [
 <!-- ============ APP SHELL ============ -->
 <div id="appScreen" class="hidden">
   <header class="top">
-    <div class="brand">🎁 Gift Keeper<small id="whoLine"></small></div>
+    <div class="brand">🎁 Gift Keeper<small id="whoLine"></small><small id="saveStatus" class="hidden" style="font-weight:500;"></small></div>
     <div>
       <button class="iconbtn" id="bellBtn" type="button">🔔<span class="dot hidden" id="bellDot"></span></button>
       <button class="iconbtn" id="signOutBtn" type="button">Sign out</button>
@@ -299,6 +289,11 @@ var SEASONS = [
     <section id="view-people" class="hidden">
       <h1>People</h1>
       <p class="muted">Tap a person to see their dates, sizes and gifts.</p>
+      <div class="card hidden" id="orphanNote">
+        <h2>An older list was found on this device</h2>
+        <p class="muted small">Gift Keeper used to keep one shared list copy on this device, so this older copy was set aside untouched when you signed in — it was never mixed into anyone's account. Your account's list here is empty. If this older list is yours, make it yours here; if it isn't, just leave it — it stays on this device only and touches nothing.</p>
+        <p><button class="btn" id="orphanRescueBtn" type="button">Make this my list</button></p>
+      </div>
       <div id="peopleList"></div>
       <p id="noPeople" class="muted hidden">No one here yet. Add the first person you buy gifts for.</p>
       <p style="margin-top:14px;"><button class="btn" id="addPersonBtn" type="button">➕ Add a person</button></p>
@@ -775,6 +770,43 @@ var SEASONS = [
    row) and the device keeps a working copy, which the lock
    card and the in-app Privacy words now also say out loud.
    Wording only — no reader, send-link, or feature change.
+   Account-safe save (2026-11-09, NOT yet live): the
+   device working copy is now kept per account
+   (gift-keeper-v1:<user id>) instead of in one shared
+   key, so two accounts used on one computer can never
+   pour into each other at sign-in again — the crossing
+   Mary caught live on 2026-11-09, when a test account
+   and her own account traded people on her computer.
+   The old shared key is only a migration source now:
+   it is adopted only when the account's own cloud list
+   proves it (same people ids), otherwise it is set
+   aside untouched under an orphan key — never merged,
+   never silently deleted — and it is offered back,
+   behind an explicit tap and confirm, only to a
+   signed-in account whose cloud list is empty. Folds
+   that remain (this account's own device copy into its
+   own cloud list, e.g. after offline changes) match
+   people by their stable id first, so a rename sticks
+   and the old name never resurrects. Saves stay
+   automatic through the same update() funnel, and the
+   header now shows the save truth — "Saving…", then
+   "Saved ✓" with the time, or an honest "Couldn't
+   save" — so nobody has to go save a backup by hand to
+   feel safe. The backup card is unchanged: it is the
+   person's own archive and rescue tool, nothing more.
+   The by-hand entry door closes (2026-11-09, NOT yet
+   live): the paying front is live and proven, so asking
+   Marybeth to let you in by hand is no longer offered —
+   the front-door button for it, the third sign-in tab
+   and its pane, the gate screen's button for it, the
+   function behind them, and its two backend calls all
+   leave together. The gate now points at the buying
+   door (the same $15.99-a-year link as the front door)
+   and at signing in with the email you paid with. The
+   Admin view is untouched — it still lists past asks
+   and approves them, and the gate still checks for an
+   approved ask before offering a first password. App
+   surface only; no backend change.
    Screenshot/label reader (2026-11-09, NOT yet live): adds a
    "📸 Read a screenshot or label" door at the top of the gift
    form, restoring the Vibely-era reader on Mary's own stack.
@@ -999,7 +1031,15 @@ function fullNormalize(e){ return repairState(normState(e)); }
    People match by lowercase trimmed name; occasions dedupe by id
    or (month, day, label); gifts merge by id, re-pointed to the
    matched person's id. Empty never overwrites: if either side has
-   people, the result has people. */
+   people, the result has people.
+   Account-safe fold (2026-11-09): PEOPLE MATCH BY STABLE ID
+   FIRST (mergeStatesById below); the name match above remains
+   only as the fallback for records whose ids are missing, and
+   only inside this account's own copies. A person matched by id
+   keeps the DEVICE copy's name when the two differ — a rename
+   made on this device under this account sticks, and the old
+   name never comes back. Gifts still fold by id and re-point to
+   the matched person's id. */
 function mergeStates(base, other){
   var people = base.people.map(function(p){
     return Object.assign({}, p, {occasions: p.occasions.slice()});
@@ -1039,12 +1079,71 @@ function mergeStates(base, other){
   });
 }
 
+
+/* ---------- merge by id (2026-11-09) ----------
+   Same fold shape as mergeStates, but identity follows the
+   person's stable id: a device person matches the cloud person
+   with the same id (name is only a fallback for records with no
+   id). For an id-matched person the device copy's name wins, so
+   a rename sticks; occasions and gifts fold exactly as in
+   mergeStates. Used ONLY for this account's own copies. */
+function mergeStatesById(base, other){
+  var people = base.people.map(function(p){
+    return Object.assign({}, p, {occasions: p.occasions.slice()});
+  });
+  var gifts = base.gifts.map(function(g){ return Object.assign({}, g); });
+  function matchFor(op){
+    var i;
+    if (op.id){
+      for (i = 0; i < people.length; i++){ if (people[i].id === op.id) return people[i]; }
+    }
+    for (i = 0; i < people.length; i++){ if (lowerName(people[i].name) === lowerName(op.name)) return people[i]; }
+    return null;
+  }
+  other.people.forEach(function(op){
+    var found = matchFor(op);
+    if (!found){ people.push(Object.assign({}, op, {occasions: op.occasions.slice()})); return; }
+    if (found.id === op.id && op.name) found.name = op.name;
+    op.occasions.forEach(function(o){
+      var dup = found.occasions.some(function(x){
+        return x.id === o.id || (x.month === o.month && x.day === o.day && x.label === o.label);
+      });
+      if (!dup) found.occasions.push(Object.assign({}, o, {id: o.id || newId("o")}));
+    });
+    found.sizes = found.sizes || op.sizes;
+    found.favorites = found.favorites || op.favorites;
+    found.hobbies = found.hobbies || op.hobbies;
+    found.notes = found.notes || op.notes;
+    found.relationship = found.relationship || op.relationship;
+    found.archived = found.archived && op.archived;
+  });
+  var idByPersonId = {};
+  people.forEach(function(p){ idByPersonId[p.id] = p.id; });
+  other.people.forEach(function(op){
+    var m = matchFor(op);
+    if (m) idByPersonId[op.id] = m.id;
+  });
+  other.gifts.forEach(function(og){
+    if (gifts.some(function(g){ return g.id === og.id; })) return;
+    gifts.push(Object.assign({}, og, {personId: idByPersonId[og.personId] || og.personId}));
+  });
+  return Object.assign({}, base, {
+    people: people, gifts: gifts,
+    budget: base.budget || other.budget,
+    eventLimits: Object.assign({}, other.eventLimits, base.eventLimits),
+    seenReminders: Array.from(new Set(base.seenReminders.concat(other.seenReminders))),
+    notifyEmail: base.notifyEmail || other.notifyEmail
+  });
+}
+
 /* ---------- store ---------- */
 var sb = null;
 var user = null;
 var state = defaultState();
 var cloudReady = false;
 var saveTimer = null;
+var saveFailed = false;
+var rescueDoneFor = null;
 var lockArmedThisLoad = false;
 var currentPersonId = null;
 var editingPersonId = null;
@@ -1055,15 +1154,118 @@ var upcomingShowAll = false;
 var importEvents = [];
 
 function stripPin(s){ var c = Object.assign({}, s); delete c.pin; delete c.lockOn; return c; }
-function loadLocal(){
+/* ---------- account-safe store (2026-11-09) ----------
+   The device working copy belongs to ONE account: its key is
+   gift-keeper-v1:<user id>. Another account's copy on the same
+   device is never read into this account and never pushed to
+   this account's cloud row. The bare gift-keeper-v1 key is a
+   legacy migration source ONLY (see settleLegacyCopy). */
+function acctKey(){ return user ? STORE_KEY + ":" + user.id : null; }
+function readRaw(key){
+  try { return localStorage.getItem(key); } catch (e){ return null; }
+}
+function writeRaw(key, val){
+  try { localStorage.setItem(key, val); } catch (e){}
+}
+function acctRaw(){ var k = acctKey(); return k ? readRaw(k) : null; }
+function parseStateRaw(raw){
+  try { return raw ? fullNormalize(JSON.parse(raw)) : null; }
+  catch (e){ return null; }
+}
+function peopleIdSet(st){
+  var ids = [];
+  (st && st.people ? st.people : []).forEach(function(p){ if (p && p.id) ids.push(p.id); });
+  return ids.sort();
+}
+function samePeopleIds(a, b){
+  var x = peopleIdSet(a), y = peopleIdSet(b);
+  if (x.length !== y.length) return false;
+  for (var i = 0; i < x.length; i++){ if (x[i] !== y[i]) return false; }
+  return true;
+}
+function listIsEmpty(st){
+  return !st || ((st.people || []).length === 0 && (st.gifts || []).length === 0);
+}
+/* Settle the old shared key at sign-in, BEFORE any fold reads a
+   device copy. Returns "adopt" when the legacy copy provably
+   belongs to this account — its people ids match the cloud
+   list's, order aside (the pre-fix device copy of this very
+   account always does; a folded stranger copy provably does
+   not). Otherwise the legacy words move, byte for byte, to an
+   orphan key: kept on the device, never merged, never silently
+   deleted. The legacy key itself leaves either way — the bare
+   key must never feed two accounts twice. An adopted copy is
+   first perched under this account's own key: loadLocal reads
+   only that key, so the perch is what lets the fold see it. */
+function settleLegacyCopy(cloudNorm){
+  var raw = readRaw(STORE_KEY);
+  if (raw == null) return "none";
+  var legacy = parseStateRaw(raw);
+  var adopt = !!legacy && !!cloudNorm &&
+    legacy.people.length > 0 && samePeopleIds(legacy, cloudNorm);
+  if (!adopt){
+    writeRaw(STORE_KEY + ":orphan-" + Date.now(), raw);
+  } else {
+    /* Adopted: this legacy copy provably belongs to THIS account
+       (its people ids match this account's cloud list), so perch
+       it under this account's own key before the bare key goes —
+       loadLocal reads only the per-account key, and without the
+       perch the adopted copy would never reach the fold. */
+    var k = acctKey();
+    if (k) writeRaw(k, raw);
+  }
+  try { localStorage.removeItem(STORE_KEY); } catch (e){}
+  return adopt ? "adopt" : "quarantine";
+}
+function findOrphanKey(){
   try {
-    var raw = localStorage.getItem(STORE_KEY);
-    return raw ? fullNormalize(JSON.parse(raw)) : normState(null);
-  } catch (e){ return normState(null); }
+    var keys = [];
+    for (var i = 0; i < localStorage.length; i++){
+      var k = localStorage.key(i);
+      if (k && k.indexOf(STORE_KEY + ":orphan-") === 0) keys.push(k);
+    }
+    keys.sort();
+    return keys.length ? keys[keys.length - 1] : null;
+  } catch (e){ return null; }
+}
+function orphanState(){
+  var k = findOrphanKey();
+  return k ? parseStateRaw(readRaw(k)) : null;
+}
+/* The rescue offer shows ONLY when the orphan holds a real list
+   AND this account's own list is empty — on a shared device, an
+   account with a list of its own never even sees another
+   account's set-aside copy. */
+function refreshOrphanNote(){
+  var note = $("orphanNote"); if (!note) return;
+  var orph = orphanState();
+  var show = !!user && !!orph && orph.people.length > 0 &&
+    listIsEmpty(state) && !(rescueDoneFor && rescueDoneFor === findOrphanKey());
+  note.classList.toggle("hidden", !show);
+}
+function rescueOrphan(){
+  var k = findOrphanKey(); if (!k) return;
+  var orph = parseStateRaw(readRaw(k));
+  if (!orph || !listIsEmpty(state)) { refreshOrphanNote(); return; }
+  if (!window.confirm("Make this older list yours? It was set aside on this device, and your list here is empty. This becomes your list and saves to your account.")) return;
+  state = orph;
+  persistLocal();
+  cloudReady = true;
+  pushCloud();
+  try { localStorage.removeItem(k); } catch (e){}
+  rescueDoneFor = k;
+  refreshOrphanNote();
+  renderPeople(); updateBell();
+  toast("That list is yours now, and saved to your account.");
+}
+function loadLocal(){
+  var raw = acctRaw();
+  var parsed = raw != null ? parseStateRaw(raw) : null;
+  return parsed || normState(null);
 }
 function localPin(){
   try {
-    var raw = localStorage.getItem(STORE_KEY);
+    var raw = acctRaw();
     if (!raw) return "1234";
     var o = JSON.parse(raw);
     return typeof o.pin === "string" && o.pin ? o.pin : "1234";
@@ -1071,22 +1273,45 @@ function localPin(){
 }
 function lockOnLocal(){
   try {
-    var raw = localStorage.getItem(STORE_KEY);
+    var raw = acctRaw();
     if (!raw) return false;
     return JSON.parse(raw).lockOn === true;
   } catch (e){ return false; }
 }
 function persistLocal(){
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e){}
+  var k = acctKey(); if (!k) return;
+  writeRaw(k, JSON.stringify(state));
+}
+/* The header save indicator tells the truth about the account
+   save: quiet while typing, "Saving…" while a push is owed or in
+   flight, "Saved ✓ <time>" when the account copy is home, and
+   "Couldn't save" when it isn't — nothing is claimed saved that
+   the account didn't take. */
+function setSaveStatus(mode){
+  var el = $("saveStatus"); if (!el) return;
+  if (!user){ el.classList.add("hidden"); el.classList.remove("bad"); el.textContent = ""; return; }
+  el.classList.remove("hidden");
+  if (mode === "saving"){ el.classList.remove("bad"); el.textContent = "Saving…"; }
+  else if (mode === "bad"){ el.classList.add("bad"); el.textContent = "Couldn't save — check your connection"; }
+  else {
+    el.classList.remove("bad");
+    el.textContent = "Saved ✓ " + new Date().toLocaleTimeString("en-US", {hour: "numeric", minute: "2-digit"});
+  }
 }
 function pushCloud(){
   if (!user || !cloudReady) return;
+  setSaveStatus("saving");
   var data = stripPin(state);
   sb.from("gift_lists").upsert({user_id: user.id, data: data, updated_at: new Date().toISOString()})
-    .then(function(r){ if (r.error) console.error("The list didn't save to the account", r.error); });
+    .then(function(r){
+      if (r.error){ saveFailed = true; setSaveStatus("bad"); console.error("The list didn't save to the account", r.error); return; }
+      saveFailed = false; setSaveStatus("saved");
+    })
+    .catch(function(e){ saveFailed = true; setSaveStatus("bad"); console.error("The list didn't save to the account", e); });
 }
 function schedulePush(){
   if (saveTimer) window.clearTimeout(saveTimer);
+  setSaveStatus("saving");
   saveTimer = window.setTimeout(pushCloud, 900);
 }
 /* Every mutation funnels through here: save local at once, push to the account. */
@@ -2391,7 +2616,7 @@ async function sendFeedbackPhoto(message){
 /* ---------- settings ---------- */
 function renderSettings(){
   $("setEmail").textContent = user && user.email ? user.email : "—";
-  var on = lockOnLocal();
+  var on = user ? lockOnLocal() : false;
   $("lockOffWrap").classList.toggle("hidden", on);
   $("lockOnWrap").classList.toggle("hidden", !on);
   $("lockToggle").checked = on;
@@ -2430,7 +2655,8 @@ function importBackup(file){
         });
       }, true);
       state = fullNormalize(state);
-      persistLocal(); pushCloud();
+      persistLocal();
+      if (user && cloudReady){ pushCloud(); } else { setSaveStatus("bad"); }
       toast("Your gift list was restored on this device.");
       showView("view-people");
     } catch (err){
@@ -2522,28 +2748,43 @@ async function removeAccess(email){
   renderAdmin();
 }
 
-/* ---------- cloud sync on sign-in (ported from the live provider) ----------
-   merged = repair(merge(normalize(cloud), normalize(local)))
-   The cloud blob is the base; the local blob folds in. Then the
-   merged list is saved locally and pushed back up.            */
+/* ---------- cloud sync on sign-in: the account owns its list ----------
+   The account's cloud list is the list. This account's own device
+   copy folds in by ID (mergeStatesById) — offline changes made on
+   this device under this account survive. The legacy shared key is
+   settled first (settleLegacyCopy): it folds in only when its
+   people ids prove it is this account's own copy; otherwise it is
+   quarantined, never merged. A copy keyed to another account is
+   never read here at all. The result is saved under THIS account's
+   key and pushed to THIS account's cloud row. */
 async function syncOnSignIn(){
-  var local = loadLocal();
   var cloudData = null;
   try {
     var res = await sb.from("gift_lists").select("data").eq("user_id", user.id).maybeSingle();
     if (res && res.data && res.data.data) cloudData = res.data.data;
   } catch (e){ console.error("Couldn't read the account list", e); }
+  var cloudNorm = cloudData ? fullNormalize(cloudData) : null;
+  var verdict = settleLegacyCopy(cloudNorm);
+  var local = loadLocal();
   var merged;
-  if (cloudData){
-    merged = repairState(mergeStates(fullNormalize(cloudData), fullNormalize(local)));
+  if (cloudNorm){
+    var fold = null;
+    if (verdict === "adopt") fold = fullNormalize(JSON.parse(JSON.stringify(local)));
+    else if (acctRaw() != null) fold = local;
+    merged = fold ? repairState(mergeStatesById(cloudNorm, fold)) : cloudNorm;
+  } else if (verdict === "adopt"){
+    merged = local;
   } else {
-    merged = fullNormalize(local);
+    /* First run for this account (no cloud row): only a device
+       copy already keyed to THIS account may seed it. */
+    merged = (acctRaw() != null) ? local : normState(null);
   }
   merged.pin = localPin();
   merged.lockOn = lockOnLocal();
   state = merged;
   persistLocal();
   cloudReady = true;
+  refreshOrphanNote();
   pushCloud();
 }
 function maybeLock(){
@@ -2574,11 +2815,9 @@ async function checkApproved(){
 async function gateAndEnter(){
   showScreen("gateScreen");
   $("gateText").textContent = "Checking your access…";
-  $("gateRequestBtn").classList.add("hidden");
   var approved = await checkApproved();
   if (!approved){
-    $("gateText").textContent = "This email isn't on the approved list yet. Just paid? Give it a minute, then sign out and sign back in with the email you paid with. Haven't paid? Ask for access and Marybeth will take care of it, usually the same day.";
-    $("gateRequestBtn").classList.remove("hidden");
+    $("gateText").textContent = "This email isn't on the approved list yet. Just paid? Give it a minute, then sign out and sign back in with the email you paid with. Haven't paid yet? Gift Keeper is $15.99 a year — tap Get Gift Keeper below, check out with this same email, and paying lets you in by itself.";
     return;
   }
   var needsPw = false;
@@ -2667,32 +2906,10 @@ async function saveChosenPassword(){
   }
   await enterApp();
 }
-async function doRequestAccess(email, msgEl){
-  hideMsg(msgEl);
-  if (!validEmail(email)){ showMsg(msgEl, "Type a full email address, like name@example.com."); return; }
-  email = email.trim();
-  var approved = await checkApproved();
-  if (approved){
-    showMsg(msgEl, "You're already approved — sign in, or use \u201CI'm new here\u201D to create your password.", true);
-    return;
-  }
-  var res = await sb.rpc("request_access", {requested: email});
-  if (res.error){ showMsg(msgEl, "The request didn't go through. Try again in a moment."); return; }
-  var sent = true;
-  try {
-    var inv = await sb.functions.invoke("notify-access-request", {body: {email: email}});
-    if (inv.error || !(inv.data && inv.data.sent === true)) sent = false;
-  } catch (e){ sent = false; }
-  if (!sent){
-    console.error("The access notification to the owner did not send.");
-    showMsg(msgEl, "Your request was saved, but the note to Marybeth didn't send. She'll still see your request when she checks.", true);
-  } else {
-    showMsg(msgEl, "Your request is in! Marybeth lets everyone in by hand, usually the same day. Watch your email.", true);
-  }
-}
 function signOut(){
   sb.auth.signOut().then(function(){
     user = null; cloudReady = false; lockArmedThisLoad = false;
+    setSaveStatus("hide");
     showScreen("frontScreen");
   });
 }
@@ -2737,7 +2954,7 @@ function deleteMyAccount(){
   .then(function(r){
     if(r.error) throw r.error;
     if(r.data && r.data.error) throw new Error(r.data.error);
-    try { localStorage.removeItem(STORE_KEY); } catch(e){}
+    try { var dk = acctKey(); if (dk) localStorage.removeItem(dk); localStorage.removeItem(STORE_KEY); } catch(e){}
     return sb.auth.signOut().then(function(){
       user = null; cloudReady = false; lockArmedThisLoad = false; state = defaultState();
       showScreen("frontScreen");
@@ -2773,10 +2990,8 @@ function closeLegal(){
 function switchAuthTab(which){
   $("tabSignIn").classList.toggle("on", which === "signin");
   $("tabNew").classList.toggle("on", which === "new");
-  $("tabRequest").classList.toggle("on", which === "request");
   $("signInPane").classList.toggle("hidden", which !== "signin");
   $("newPane").classList.toggle("hidden", which !== "new");
-  $("requestPane").classList.toggle("hidden", which !== "request");
 }
 
 /* ---------- wire up ---------- */
@@ -2786,10 +3001,12 @@ function init(){
     return;
   }
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  state = loadLocal();
+  /* No device copy is loaded before sign-in: the working copy
+     belongs to an account, and nobody is signed in yet. The
+     legacy shared key is settled inside syncOnSignIn. */
+  state = normState(null);
   // front door
   $("frontSignInBtn").addEventListener("click", function(){ showScreen("authScreen"); switchAuthTab("signin"); });
-  $("frontRequestBtn").addEventListener("click", function(){ showScreen("authScreen"); switchAuthTab("request"); });
   $("frontPrivacyBtn").addEventListener("click", function(){ openLegal("view-privacy"); });
   $("frontTermsBtn").addEventListener("click", function(){ openLegal("view-terms"); });
   $("authPrivacyBtn").addEventListener("click", function(){ openLegal("view-privacy"); });
@@ -2801,23 +3018,19 @@ function init(){
   // auth
   $("tabSignIn").addEventListener("click", function(){ switchAuthTab("signin"); });
   $("tabNew").addEventListener("click", function(){ switchAuthTab("new"); });
-  $("tabRequest").addEventListener("click", function(){ switchAuthTab("request"); });
   $("signInBtn").addEventListener("click", signIn);
   $("siPass").addEventListener("keydown", function(e){ if (e.key === "Enter") signIn(); });
   $("forgotBtn").addEventListener("click", forgotPassword);
   $("createBtn").addEventListener("click", createPassword);
   $("nuPass2").addEventListener("keydown", function(e){ if (e.key === "Enter") createPassword(); });
-  $("requestBtn").addEventListener("click", function(){ doRequestAccess($("rqEmail").value, $("rqMsg")); });
   $("pwSaveBtn").addEventListener("click", saveChosenPassword);
   $("pwSignOutBtn").addEventListener("click", signOut);
   $("gateSignOutBtn").addEventListener("click", signOut);
-  $("gateRequestBtn").addEventListener("click", function(){
-    doRequestAccess(user && user.email ? user.email : "", $("gateMsg"));
-  });
   // app nav
   Array.prototype.forEach.call(document.querySelectorAll("[data-nav]"), function(b){
     b.addEventListener("click", function(){ showView(b.getAttribute("data-nav")); });
   });
+  $("orphanRescueBtn").addEventListener("click", rescueOrphan);
   $("signOutBtn").addEventListener("click", signOut);
   $("setSignOutBtn").addEventListener("click", signOut);
   $("bellBtn").addEventListener("click", function(){ showView("view-upcoming"); });
