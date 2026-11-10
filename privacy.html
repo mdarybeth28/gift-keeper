@@ -72,15 +72,15 @@
       <li>Marybeth gets an email with a link to it, and that link stops working after 7 days.</li>
     </ul>
 
-    <h2>Reading a screenshot or label</h2>
-    <p>The gift form has a "📸 Read a screenshot or label" button. That reading is separate from sending Marybeth a photo, and it only ever happens when you tap that button and pick a photo yourself:</p>
+    <h2>Reading a screenshot, label or wish list</h2>
+    <p>The gift form has a "📸 Read a screenshot or label" button, and each person's page has a "📷 Load a wish list" button that reads a whole handwritten or printed wish list in one go. That reading is separate from sending Marybeth a photo, and it only ever happens when you tap that button and pick a photo yourself:</p>
     <ul>
-      <li>The photo you pick is sent to Google's Gemini reader, which reads the words on it — the gift's name, the price, who it's for, the tracking number and carrier — and hands them back to the form.</li>
+      <li>The photo you pick is sent to Google's Gemini reader, which reads the words on it — the gift's name, the price, who it's for, the tracking number and carrier — and hands them back to the form. A wish list photo is read line by line instead, and the lines come back as a list of wishes for you to check — nothing from a wish list is saved until you tap Save.</li>
       <li>The form shows you everything it filled in, and nothing is saved until you check it and tap Save gift yourself.</li>
       <li>The reader never hands back home addresses — a shipping label's address block is left out on purpose. Names come back; street addresses never do.</li>
       <li>The photo itself is not kept by the reader. Gift Keeper keeps a fingerprint of the photo and the words that were read, so reading the same photo again is free instead of costing another read.</li>
       <li>There is a limit of 60 new photo reads a day per account, to keep the reading costs sane.</li>
-      <li>Reading is always your choice. The form works exactly the same filled in by hand, and a photo that won't read never stops you saving the gift.</li>
+      <li>Reading is always your choice. The form works exactly the same filled in by hand, a wish list can always be typed in line by line, and a photo that won't read never stops you saving the gift.</li>
     </ul>
 
     <h2>Payments</h2>
@@ -94,7 +94,7 @@
       <li><b>Supabase</b> — keeps your account and your gift list in its database, behind your sign-in.</li>
       <li><b>Stripe</b> — runs the $15.99-a-year subscription, so card numbers never touch Gift Keeper.</li>
       <li><b>Resend</b> — sends the emails, like your welcome note and the photo links Marybeth gets when you send her a photo.</li>
-      <li><b>Google Gemini</b> — reads the words off the screenshots and label photos you ask it to read on the gift form. It gets only the photo you picked for that read, and it never hands back home addresses.</li>
+      <li><b>Google Gemini</b> — reads the words off the screenshots, label photos and wish list photos you ask it to read. It gets only the photo you picked for that read, and it never hands back home addresses.</li>
       <li><b>GitHub Pages</b> — serves the Gift Keeper pages themselves.</li>
     </ul>
 
