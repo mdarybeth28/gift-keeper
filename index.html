@@ -106,6 +106,10 @@
   .footlinks{text-align:center;margin:26px 0 8px;}
   .footlinks button{background:none;border:none;color:var(--green-dark);font-weight:700;font-size:.95rem;cursor:pointer;font-family:inherit;text-decoration:underline;}
   @media print{ header.top,.noprint{display:none !important;} body{background:#fff;} .card{box-shadow:none;} }
+
+  .pwwrap{position:relative;display:block;}
+  .pwwrap input{padding-right:52px;}
+  .pweye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:1.25rem;padding:10px;cursor:pointer;line-height:1;}
 </style>
 <script>
 /* ---------- seasonal accents ----------
@@ -3799,6 +3803,34 @@ function tryUnlock(){
   } catch (e) {}
 })();
 document.addEventListener("DOMContentLoaded", init);
+</script>
+
+<script>
+// Password show/hide eyes (tester feedback 2026-11-22): let folks check what
+// they typed on the sign-in and set-password fields. PIN pads stay as they are.
+(function(){
+  ['siPass','nuPass','nuPass2','pwNew','pwNew2'].forEach(function(id){
+    var inp = document.getElementById(id);
+    if(!inp || inp.type !== 'password') return;
+    var w = document.createElement('span');
+    w.className = 'pwwrap';
+    inp.parentNode.insertBefore(w, inp);
+    w.appendChild(inp);
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pweye';
+    b.textContent = '\uD83D\uDC41\uFE0F';
+    b.setAttribute('aria-label','Show password');
+    b.addEventListener('click', function(){
+      var show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      b.textContent = show ? '\uD83D\uDE48' : '\uD83D\uDC41\uFE0F';
+      b.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      inp.focus();
+    });
+    w.appendChild(b);
+  });
+})();
 </script>
 </body>
 </html>
