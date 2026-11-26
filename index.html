@@ -336,6 +336,7 @@ var SEASONS = [
       <div id="peopleList"></div>
       <p id="noPeople" class="muted hidden">No one here yet. Add the first person you buy gifts for.</p>
       <p style="margin-top:14px;"><button class="btn" id="addPersonBtn" type="button">➕ Add a person</button></p>
+      <p><button class="btn secondary" id="orderDoorBtn" type="button">📧 Add gifts from an order email</button></p>
       <div class="card">
         <h2>Merge two people</h2>
         <p class="muted small">For when the same person got saved twice. Everything moves onto the one you keep; the other is deleted.</p>
@@ -422,6 +423,7 @@ var SEASONS = [
         <h2 id="pdGiftsTitle">Gifts</h2>
         <p class="muted" id="pdSpent"></p>
         <p><button class="btn plain" id="pdWishBtn" type="button">📷 Load a wish list from a photo</button></p>
+        <p><button class="btn plain" id="pdOrderBtn" type="button">📧 Add gifts from an order email</button></p>
         <div id="pdGifts"></div>
       </div>
       <div class="card">
@@ -532,6 +534,41 @@ var SEASONS = [
           </div>
           <div id="wlMsg" class="msg"></div>
           <p style="margin-top:16px;"><button class="btn" id="wlSaveBtn" type="button">Save wishes</button></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ORDER EMAIL ===== -->
+    <section id="view-order" class="hidden">
+      <p><button class="iconbtn" id="odBackBtn" type="button">← Back</button></p>
+      <div class="card">
+        <h1>📧 Add from an order email</h1>
+        <p class="small muted" style="margin-top:0;">Screenshot the order confirmation email — or the “your order shipped” one — and Gift Keeper reads every gift on it. An order doesn't say who each gift is for, so you pick the person for each one. Nothing is saved by the read: you check everything, then tap Save. Each gift lands as Purchased, and tracking rides along when the email shows it — read a shipping email for a gift already on the list and Save just adds the tracking to it.</p>
+        <p><button class="btn" id="odPickBtn" type="button">📧 Take or pick the email screenshot</button></p>
+        <input id="odFile" type="file" accept="image/*" class="hidden">
+        <div id="odNote" class="hidden" style="background:var(--green-soft);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0;">
+          <p id="odText" style="margin:0;"></p>
+          <p id="odSendMaryWrap" class="hidden" style="margin:10px 0 2px;"><button class="btn plain" id="odSendMaryBtn" type="button">Can't read it? Send this photo to Mary</button></p>
+        </div>
+        <img id="odPhotoPrev" class="preview hidden" alt="The order email screenshot">
+        <div id="odReview" class="hidden">
+          <h3>Check the order</h3>
+          <label for="odStore">Store</label>
+          <input id="odStore" type="text" placeholder="Amazon, Walmart, Etsy…">
+          <label for="odDate">Order date</label>
+          <input id="odDate" type="date">
+          <label for="odOccasion">Occasion (the same for all of them)</label>
+          <select id="odOccasion"></select>
+          <label for="odCarrier">Carrier</label>
+          <select id="odCarrier"></select>
+          <label for="odTracking">Tracking number</label>
+          <input id="odTracking" type="text" placeholder="From the shipping email, when it shows one">
+          <h4 style="margin:16px 0 4px;">The gifts</h4>
+          <p class="small muted" style="margin-top:0;">Pick who each gift is for, fix any price, tap ✕ to drop a line. A gift already on that person's list is never doubled — Save adds this tracking to it instead.</p>
+          <div id="odRows"></div>
+          <p><button class="btn plain" id="odAddBtn" type="button">＋ Add another item</button></p>
+          <div id="odMsg" class="msg"></div>
+          <p style="margin-top:16px;"><button class="btn" id="odSaveBtn" type="button">Save gifts</button></p>
         </div>
       </div>
     </section>
@@ -783,7 +820,7 @@ var SEASONS = [
         <p class="muted">Last updated: November 2026</p>
         <p>Gift Keeper is run by Mary Beth (Mary Beth's Finds). Questions: use the Send feedback button inside Gift Keeper.</p>
         <p>What Gift Keeper keeps: your email address, and the gift lists you type in — people, gifts, hiding places, dates, and amounts you choose to add. That's it. Your list is saved to your account in the cloud, so it's there when you sign in on any device — not only on one phone.</p>
-        <p>If you tap "📸 Read a screenshot or label" on the gift form, that one photo goes to Google's Gemini reader, which reads the words on it and hands them back to the form for you to check — nothing is saved until you tap Save gift. The reader never hands back home addresses from a label, and Gift Keeper keeps a fingerprint of the photo plus the words it read, so reading the same photo again is free. The full plain-words version lives on the Privacy page in Settings.</p>
+        <p>If you tap "📸 Read a screenshot or label" on the gift form, that one photo goes to Google's Gemini reader, which reads the words on it and hands them back to the form for you to check — nothing is saved until you tap Save gift. The reader never hands back home addresses from a label, and Gift Keeper keeps a fingerprint of the photo plus the words it read, so reading the same photo again is free. The same goes for loading a wish list from a photo and for adding gifts from an order email screenshot: those photos go to the same reader, you check everything it read, and nothing is saved until you tap Save. The full plain-words version lives on the Privacy page in Settings.</p>
         <p>What it does NOT do: no ads, no trackers, and your list is never sold or shared with anyone. Nobody else can see your list — every person's list is private to their own sign-in.</p>
         <p>Payments are handled by Stripe. Gift Keeper never sees or stores your card number.</p>
         <p>If you want your account and your list deleted, you can do it yourself in Settings — look for "Delete my account" — or send a feedback message inside the app and it will be removed. Deleting does not by itself refund the $15.99 a year, and it doesn't cancel the subscription either — refunds and cancellations are Marybeth's call, as the Terms promise.</p>
@@ -1430,7 +1467,7 @@ function giftById(id){
 function isOwner(){ return !!user && !!user.email && user.email.toLowerCase() === OWNER_EMAIL; }
 
 /* ---------- navigation ---------- */
-var VIEWS = ["view-people","view-person","view-person-form","view-gift-form","view-wishlist","view-upcoming",
+var VIEWS = ["view-people","view-person","view-person-form","view-gift-form","view-wishlist","view-order","view-upcoming",
              "view-notifications","view-budget","view-archived","view-import","view-feedback",
              "view-settings","view-admin","view-privacy","view-terms"];
 var lastListView = "view-people";
@@ -2529,6 +2566,370 @@ function carryWishPhotoToFeedback(){
   var box = $("fbMessage");
   if (box && !box.value.trim())
     box.value = "Gift Keeper couldn't read this wish list photo — could you look at it for me?";
+  showView("view-feedback");
+  if (!dataUrl) return;
+  if (fbGiftCarryDataUrl === dataUrl && fbPhotoFile) return;
+  fbGiftCarryDataUrl = dataUrl;
+  dataUrlToFeedbackFile(dataUrl).then(function(file){
+    if (file && fbGiftCarryDataUrl === dataUrl) pickFeedbackPhoto(file);
+  });
+}
+
+/* ---------- add gifts from an order email (2026-11-26) ----------
+   One screenshot of an ORDER confirmation (or the "your order
+   shipped" email), read by the same read-gift door in its order
+   mode, into the order's facts plus EVERY item on it. An order
+   never says which item is for which person, so every line gets
+   its own person picker on the review screen — one order can
+   spread across the whole family. Nothing is saved by the read:
+   the person checks every line, then Save writes through the
+   same update() funnel as every other save. Each new gift lands
+   as "purchased" with the order's date, carrier and tracking.
+   A line that is already on that person's list is never
+   doubled: when this read carries tracking the gift does not
+   have yet, Save adds the tracking to the gift already there
+   (that is how the shipping email lands); otherwise the line is
+   counted as already filed and left alone. A quantity of 2 or
+   more becomes that many lines, so each copy can go to a
+   different person. The email screenshot itself is kept on the
+   FIRST gift this save creates, in its gift photo slot and
+   marked in its note, so the order can be looked at again. A
+   read that fails or finds nothing never blocks anything: the
+   facts and lines can be typed in by hand, and the photo can be
+   sent to Mary through the feedback door. */
+var odBusy = false;
+var odPhotoDataUrl = "";
+var odBackPersonId = "";
+var odDefaultPersonId = "";
+function odNote(text){
+  var n = $("odNote"), t = $("odText");
+  if (!n || !t) return;
+  if (!text){ n.classList.add("hidden"); t.textContent = ""; return; }
+  t.textContent = text;
+  n.classList.remove("hidden");
+}
+function odSendMaryShow(){
+  var w = $("odSendMaryWrap");
+  if (w) w.classList.toggle("hidden", !odPhotoDataUrl);
+}
+function fillOrderOccasionSelect(current){
+  // Holidays only: one order's gifts can go to different people,
+  // each with their own occasions, so the shared picker offers
+  // "Any occasion" plus the holidays and defaults to Christmas.
+  var html = '<option value="">Any occasion</option>';
+  var known = false;
+  HOLIDAYS.forEach(function(h){
+    if (h.label === current) known = true;
+    html += '<option value="' + esc(h.label) + '"' + (h.label === current ? " selected" : "") + '>' + esc(h.label) + '</option>';
+  });
+  if (current && !known) html = '<option value="' + esc(current) + '" selected>' + esc(current) + '</option>' + html;
+  $("odOccasion").innerHTML = html;
+  if (current) $("odOccasion").value = current;
+}
+function fillOrderCarrierSelect(current){
+  var opts = CARRIERS.slice();
+  if (current && opts.indexOf(current) < 0) opts.splice(1, 0, current);
+  $("odCarrier").innerHTML = opts.map(function(c){
+    return '<option value="' + esc(c) + '"' + (c === current ? " selected" : "") + '>' + (c === "" ? "Not being shipped" : esc(c)) + '</option>';
+  }).join("");
+}
+function orderPeopleOptions(selectedId){
+  var folks = state.people.filter(function(p){ return !p.archived; });
+  var html = '<option value="">Who is it for?</option>';
+  folks.forEach(function(p){
+    html += '<option value="' + esc(p.id) + '"' + (p.id === selectedId ? " selected" : "") + '>' + esc(p.name) + '</option>';
+  });
+  return html;
+}
+function orderMatchFor(pid, name){
+  if (!pid || !name) return null;
+  var key = giftNameKey(name);
+  if (!key) return null;
+  var hit = null;
+  state.gifts.forEach(function(g){
+    if (!hit && g.personId === pid && giftNameKey(g.name) === key) hit = g;
+  });
+  return hit;
+}
+function odMatchText(pid, name){
+  var g = orderMatchFor(pid, name);
+  if (!g) return "";
+  var p = personById(pid);
+  var who = p ? p.name.split(" ")[0] : "their";
+  var tracking = $("odTracking").value.trim();
+  if (tracking && !g.trackingNumber) return "Already on " + who + "'s list — Save adds this tracking to it.";
+  return "Already on " + who + "'s list — Save won't make a second one.";
+}
+function refreshOdRowMatch(row){
+  var n = row.querySelector(".odName"), sel = row.querySelector(".odPerson"), m = row.querySelector(".odMatch");
+  if (!m) return;
+  m.textContent = odMatchText(sel ? sel.value : "", n ? n.value.trim() : "");
+}
+function refreshAllOdMatches(){
+  Array.prototype.forEach.call($("odRows").querySelectorAll(".giftrow"), refreshOdRowMatch);
+}
+function odRowEl(item){
+  var row = document.createElement("div");
+  row.className = "giftrow";
+  row.setAttribute("style", "display:flex;gap:8px;align-items:flex-start;");
+  var left = document.createElement("div");
+  left.setAttribute("style", "flex:1;min-width:0;");
+  var name = document.createElement("input");
+  name.type = "text";
+  name.className = "odName";
+  name.value = item && item.name ? item.name : "";
+  name.setAttribute("placeholder", "What is the gift?");
+  name.addEventListener("input", function(){ refreshOdRowMatch(row); updateOrderSaveLabel(); });
+  left.appendChild(name);
+  var line2 = document.createElement("div");
+  line2.setAttribute("style", "display:flex;gap:8px;margin-top:6px;");
+  var price = document.createElement("input");
+  price.type = "text";
+  price.inputMode = "decimal";
+  price.className = "odPrice";
+  price.value = item && item.price ? item.price : "";
+  price.setAttribute("placeholder", "Price");
+  price.setAttribute("style", "width:110px;flex:none;");
+  line2.appendChild(price);
+  var person = document.createElement("select");
+  person.className = "odPerson";
+  person.innerHTML = orderPeopleOptions(item && item.personId ? item.personId : odDefaultPersonId);
+  person.addEventListener("change", function(){ refreshOdRowMatch(row); updateOrderSaveLabel(); });
+  line2.appendChild(person);
+  left.appendChild(line2);
+  var match = document.createElement("div");
+  match.className = "small odMatch";
+  match.setAttribute("style", "color:#8a6d00;margin-top:2px;");
+  left.appendChild(match);
+  if (item && item.unsure){
+    var flag = document.createElement("div");
+    flag.className = "small";
+    flag.setAttribute("style", "color:#8a6d00;margin-top:2px;");
+    flag.textContent = "⚠ I wasn't sure about this line — check it against the email.";
+    left.appendChild(flag);
+  }
+  var del = document.createElement("button");
+  del.type = "button";
+  del.className = "iconbtn";
+  del.textContent = "✕";
+  del.setAttribute("aria-label", "Remove this line");
+  del.addEventListener("click", function(){
+    if (row.parentNode) row.parentNode.removeChild(row);
+    updateOrderSaveLabel();
+  });
+  row.appendChild(left);
+  row.appendChild(del);
+  refreshOdRowMatch(row);
+  return row;
+}
+function odRowsData(){
+  var out = [];
+  Array.prototype.forEach.call($("odRows").querySelectorAll(".giftrow"), function(row){
+    var n = row.querySelector(".odName"), pr = row.querySelector(".odPrice"), pe = row.querySelector(".odPerson");
+    out.push({name: n ? n.value.trim() : "", price: pr ? pr.value.trim() : "", pid: pe ? pe.value : ""});
+  });
+  return out;
+}
+function updateOrderSaveLabel(){
+  var rows = odRowsData();
+  var ready = rows.filter(function(r){ return r.name && r.pid; }).length;
+  var need = rows.filter(function(r){ return r.name && !r.pid; }).length;
+  $("odSaveBtn").textContent = "Save " + ready + (ready === 1 ? " gift" : " gifts") + (need ? " — " + need + " still needs a person" : "");
+}
+function openOrderRead(personId){
+  var folks = state.people.filter(function(p){ return !p.archived; });
+  if (!folks.length){
+    toast("Add the person first — then their gifts have a home.");
+    showView("view-people");
+    return;
+  }
+  odPhotoDataUrl = "";
+  odBackPersonId = personId || "";
+  var back = odBackPersonId ? personById(odBackPersonId) : null;
+  odDefaultPersonId = back && !back.archived ? back.id : "";
+  $("odStore").value = "";
+  $("odDate").value = "";
+  fillOrderOccasionSelect("Christmas");
+  fillOrderCarrierSelect("");
+  $("odTracking").value = "";
+  $("odRows").innerHTML = "";
+  $("odReview").classList.add("hidden");
+  $("odPhotoPrev").classList.add("hidden");
+  $("odPhotoPrev").removeAttribute("src");
+  hideMsg($("odMsg"));
+  odNote("Screenshot the whole email — the order confirmation or the shipping one — and pick it here. I'll read every gift on it, then you pick who each one is for before anything is saved.");
+  odSendMaryShow();
+  showView("view-order");
+}
+function orderReadSummaryText(rd, nItems, nUnsure, capped){
+  var text = "📧 Read from your screenshot" + (rd.cached ? " (this photo was read before, so this one was free)" : "") + " — nothing is saved yet.";
+  text += " I found " + nItems + (nItems === 1 ? " gift" : " gifts") + " on the order.";
+  if (nUnsure) text += " " + nUnsure + (nUnsure === 1 ? " line wasn't" : " lines weren't") + " fully clear — marked ⚠ below, so check those against the email.";
+  if (capped) text += " One item had more than 5 in the order, so I made 5 lines for it — add more with ＋ Add another item if you need them.";
+  text += " Pick who each gift is for, check the prices, then tap Save.";
+  return text;
+}
+function applyOrderRead(rd, durl){
+  odPhotoDataUrl = durl || "";
+  if (odPhotoDataUrl){
+    $("odPhotoPrev").src = odPhotoDataUrl;
+    $("odPhotoPrev").classList.remove("hidden");
+  } else {
+    $("odPhotoPrev").classList.add("hidden");
+    $("odPhotoPrev").removeAttribute("src");
+  }
+  $("odStore").value = rd.store || "";
+  $("odDate").value = rd.order_date || todayISO();
+  fillOrderCarrierSelect(rd.carrier || "");
+  $("odTracking").value = rd.tracking_number || "";
+  var items = Array.isArray(rd.items) ? rd.items : [];
+  var box = $("odRows");
+  box.innerHTML = "";
+  var nUnsure = 0, capped = false, nLines = 0;
+  items.forEach(function(it){
+    if (!it) return;
+    if (it.unsure) nUnsure++;
+    var qty = typeof it.qty === "number" && it.qty > 0 ? Math.floor(it.qty) : 1;
+    if (qty > 5){ qty = 5; capped = true; }
+    for (var k = 0; k < qty; k++){
+      box.appendChild(odRowEl({name: it.name ? String(it.name) : "", price: it.price ? String(it.price) : "", unsure: !!it.unsure}));
+      nLines++;
+    }
+  });
+  $("odReview").classList.remove("hidden");
+  odNote(orderReadSummaryText(rd, nLines, nUnsure, capped));
+  odSendMaryShow();
+  updateOrderSaveLabel();
+}
+function readOrderPhoto(file){
+  if (!file || odBusy) return;
+  odBusy = true;
+  var btn = $("odPickBtn"), oldLabel = btn ? btn.textContent : "";
+  if (btn){ btn.disabled = true; btn.textContent = "Reading…"; }
+  odNote("Reading your screenshot…");
+  var prepDurl = "";
+  var finish = function(){
+    odBusy = false;
+    if (btn){ btn.disabled = false; btn.textContent = oldLabel; }
+    var f = $("odFile"); if (f) f.value = "";
+  };
+  feedbackPrepPhoto(file).then(function(blob){
+    var mime = (blob && blob.type) || file.type || "image/jpeg";
+    return giftBlobToDataUrl(blob).then(function(durl){
+      if (!durl) throw new Error("That photo could not be opened.");
+      prepDurl = durl;
+      var i = durl.indexOf(",");
+      var b64 = i >= 0 ? durl.slice(i + 1) : durl;
+      return sb.functions.invoke("read-gift", {body: {image_base64: b64, mime_type: mime, mode: "order"}}).then(function(inv){
+        if (inv && inv.error) throw inv.error;
+        return {rd: inv && inv.data, durl: durl};
+      });
+    });
+  }).then(function(out){
+    var rd = out.rd || {};
+    var items = Array.isArray(rd.items) ? rd.items : [];
+    if (!items.length && !rd.tracking_number){
+      // Nothing readable as an order: the screenshot stays on
+      // screen, the review opens empty so the order can be typed
+      // in by hand, and the send-to-Mary door is shown.
+      odPhotoDataUrl = out.durl;
+      $("odPhotoPrev").src = out.durl;
+      $("odPhotoPrev").classList.remove("hidden");
+      $("odRows").innerHTML = "";
+      $("odDate").value = todayISO();
+      $("odReview").classList.remove("hidden");
+      updateOrderSaveLabel();
+      odNote("I couldn't read any gifts from that screenshot — it's shown below so you can type the order in with ＋ Add another item, and the Send this photo to Mary button is right here if you'd like her eyes on it instead.");
+      odSendMaryShow();
+      return;
+    }
+    applyOrderRead(rd, out.durl);
+  }).catch(function(e){
+    console.error("Order read failed", e);
+    // A failed read never blocks the order: the screenshot (the
+    // copy the reader was about to see) is shown, the order can
+    // be typed in by hand, and the photo can be sent to Mary.
+    if (prepDurl){
+      odPhotoDataUrl = prepDurl;
+      $("odPhotoPrev").src = prepDurl;
+      $("odPhotoPrev").classList.remove("hidden");
+    }
+    if (!$("odRows").children.length) $("odReview").classList.remove("hidden");
+    updateOrderSaveLabel();
+    odNote("That read didn't go through — the reader may be busy, or the photo may not have loaded. You can type the order in with ＋ Add another item, or send the photo to Mary.");
+    odSendMaryShow();
+  }).then(finish, finish);
+}
+function saveOrderRead(){
+  var msg = $("odMsg"); hideMsg(msg);
+  var store = $("odStore").value.trim();
+  var carrier = $("odCarrier").value;
+  var tracking = $("odTracking").value.trim();
+  var occ = $("odOccasion").value || "Any occasion";
+  var date = $("odDate").value || todayISO();
+  var rows = odRowsData().filter(function(r){ return r.name; });
+  if (!rows.length){ showMsg(msg, "Add at least one gift first — type a line, or load a screenshot."); return; }
+  var need = rows.filter(function(r){ return !r.pid; }).length;
+  if (need){ showMsg(msg, "Pick who each gift is for — " + need + (need === 1 ? " line still needs" : " lines still need") + " a person."); return; }
+  var badPrice = rows.some(function(r){ return r.price !== "" && isNaN(Number(r.price)); });
+  if (badPrice){ showMsg(msg, "One of the prices isn't a number — check it looks like 24.50."); return; }
+  var ideaBase = store ? "Ordered from " + store : "Ordered online";
+  var updatesById = {};
+  var creates = [];
+  var nTracked = 0, nAlready = 0;
+  rows.forEach(function(r){
+    var match = orderMatchFor(r.pid, r.name);
+    if (match){
+      if (tracking && !match.trackingNumber){
+        updatesById[match.id] = {carrier: carrier || match.carrier || "", trackingNumber: tracking};
+        nTracked++;
+      } else {
+        nAlready++;
+      }
+      return;
+    }
+    creates.push(r);
+  });
+  var base = Date.now();
+  var photoUsed = false;
+  var made = creates.map(function(r, k){
+    var idea = ideaBase;
+    var photo = null;
+    if (!photoUsed && odPhotoDataUrl){
+      photo = odPhotoDataUrl;
+      idea = idea + " (order email photo)";
+      photoUsed = true;
+    }
+    return Object.assign({id: "g-" + (base + k), trackingStatus: "", trackingUpdatedAt: ""}, {
+      personId: r.pid, name: r.name, idea: idea, price: Number(r.price) || 0,
+      boughtOn: date, occasionLabel: occ, hidingPlace: "Not hidden yet", status: "purchased",
+      photo: photo, shippingPhoto: null, carrier: carrier, trackingNumber: tracking
+    });
+  });
+  update(function(s){
+    var gifts = s.gifts.map(function(g){
+      var u = updatesById[g.id];
+      return u ? Object.assign({}, g, u) : g;
+    });
+    return Object.assign({}, s, {gifts: made.concat(gifts)});
+  }, true);
+  var parts = [];
+  if (made.length) parts.push(made.length + (made.length === 1 ? " gift" : " gifts") + " filed");
+  if (nTracked) parts.push("tracking added to " + nTracked);
+  if (nAlready) parts.push(nAlready + " already on the list");
+  toast((parts.length ? parts.join(" · ") : "Nothing new to save") + " 💚");
+  if (odBackPersonId && personById(odBackPersonId)) openPerson(odBackPersonId);
+  else showView("view-people");
+}
+function carryOrderPhotoToFeedback(){
+  // The order screenshot's own "send it to Mary" door, riding the
+  // same feedback path as the wish list's: the photo is carried
+  // over already attached, with a starter sentence waiting in a
+  // message box that is still empty.
+  var dataUrl = odPhotoDataUrl || "";
+  var box = $("fbMessage");
+  if (box && !box.value.trim())
+    box.value = "Gift Keeper couldn't read this order email screenshot — could you look at it for me?";
   showView("view-feedback");
   if (!dataUrl) return;
   if (fbGiftCarryDataUrl === dataUrl && fbPhotoFile) return;
@@ -3656,6 +4057,24 @@ function init(){
     else showView("view-people");
   });
   $("wlSendMaryBtn").addEventListener("click", carryWishPhotoToFeedback);
+  $("pdOrderBtn").addEventListener("click", function(){ openOrderRead(currentPersonId); });
+  $("orderDoorBtn").addEventListener("click", function(){ openOrderRead(""); });
+  $("odPickBtn").addEventListener("click", function(){ $("odFile").click(); });
+  $("odFile").addEventListener("change", function(){
+    var f = $("odFile").files[0];
+    if (f) readOrderPhoto(f);
+  });
+  $("odAddBtn").addEventListener("click", function(){
+    $("odRows").appendChild(odRowEl(null));
+    updateOrderSaveLabel();
+  });
+  $("odSaveBtn").addEventListener("click", saveOrderRead);
+  $("odTracking").addEventListener("input", refreshAllOdMatches);
+  $("odBackBtn").addEventListener("click", function(){
+    if (odBackPersonId && personById(odBackPersonId)) openPerson(odBackPersonId);
+    else showView("view-people");
+  });
+  $("odSendMaryBtn").addEventListener("click", carryOrderPhotoToFeedback);
   // upcoming
   $("upcomingToggleBtn").addEventListener("click", function(){
     upcomingShowAll = !upcomingShowAll;
