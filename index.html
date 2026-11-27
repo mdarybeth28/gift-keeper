@@ -425,6 +425,15 @@ var SEASONS = [
         <div id="pdDetails"></div>
       </div>
       <div class="card">
+        <h2>🎁 Wish List &amp; Needs</h2>
+        <p class="muted small" style="margin-top:0;">What they want or need. When you buy one, tap <b>Bought it</b> and it moves down to their gifts.</p>
+        <div style="display:flex;gap:10px;">
+          <input id="pdWishInput" type="text" placeholder="What do they want or need?" style="flex:1;min-width:0;">
+          <button class="btn" id="pdWishAddBtn" type="button" style="flex:none;">Add</button>
+        </div>
+        <div id="pdWishes" style="margin-top:12px;"></div>
+      </div>
+      <div class="card">
         <h2 id="pdGiftsTitle">Gifts</h2>
         <p class="muted" id="pdSpent"></p>
         <p><button class="btn plain" id="pdWishBtn" type="button">📷 Load a wish list from a photo</button></p>
@@ -1854,9 +1863,18 @@ function renderPerson(){
   $("pdGiftsTitle").textContent = "Gifts for " + p.name.split(" ")[0];
   $("pdSpent").textContent = money(spent) + " spent";
   var archCount = state.gifts.filter(function(g){ return g.personId === p.id && g.archived; }).length;
+  var wishes = mine.filter(function(g){ return g.status === "thinking"; });
+  var bought = mine.filter(function(g){ return g.status !== "thinking"; });
+  var whtml = "";
+  if (!wishes.length) whtml = '<p class="muted">No wishes yet — type what they want or need above and tap Add.</p>';
+  wishes.forEach(function(g){ whtml += wishRowHtml(g); });
+  $("pdWishes").innerHTML = whtml;
+  wireGiftRows($("pdWishes"), p);
+  wireQuickWish(p);
   var html = "";
   if (!mine.length) html = '<p class="muted"><b>No gift ideas yet</b><br>Add an idea now and fill in the details once you buy it.</p>';
-  mine.forEach(function(g){ html += giftRowHtml(g, p); });
+  else if (!bought.length) html = '<p class="muted">Nothing bought yet — their wishes are in the list above.</p>';
+  bought.forEach(function(g){ html += giftRowHtml(g, p); });
   if (archCount > 0) html += '<p class="muted small">' + archCount + " archived gift" + (archCount === 1 ? " is" : "s are") + " kept in Archived.</p>";
   $("pdGifts").innerHTML = html;
   wireGiftRows($("pdGifts"), p);
@@ -1923,6 +1941,39 @@ function giftRowHtml(g, p){
           '<button class="iconbtn" data-arch-gift="' + esc(g.id) + '" type="button">Archive gift</button>' +
           '<button class="iconbtn" data-del-gift="' + esc(g.id) + '" type="button">Delete gift</button></div></div>';
   return html;
+}
+function wishRowHtml(g){
+  var html = '<div class="giftrow"><div style="display:flex;gap:12px;">';
+  if (g.photo) html += '<img class="thumb" src="' + esc(g.photo) + '" alt="Photo of ' + esc(g.name) + '">';
+  html += '<div style="min-width:0;flex:1;"><div class="gt">' + esc(g.name) + '</div>';
+  if (g.occasionLabel) html += '<div class="gd">' + esc(g.occasionLabel) + '</div>';
+  if (g.idea) html += '<div class="gd" style="margin-top:4px;">' + esc(g.idea) + '</div>';
+  html += '</div></div>';
+  html += '<div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+  html += '<button class="iconbtn" data-mark="purchased" data-gift="' + esc(g.id) + '" type="button">✔ Bought it</button>' +
+          '<button class="iconbtn" data-edit-gift="' + esc(g.id) + '" type="button">Edit</button>' +
+          '<button class="iconbtn" data-del-gift="' + esc(g.id) + '" type="button">Delete</button></div></div>';
+  return html;
+}
+function wireQuickWish(p){
+  var input = $("pdWishInput"), btn = $("pdWishAddBtn");
+  if (!input || !btn) return;
+  function add(){
+    var text = input.value.trim();
+    if (!text){ input.focus(); return; }
+    var gift = Object.assign({id: "g-" + Date.now(), trackingStatus: "", trackingUpdatedAt: ""}, {
+      personId: p.id, name: text, idea: "", price: 0, boughtOn: "",
+      occasionLabel: "Any occasion", hidingPlace: "Not hidden yet", status: "thinking",
+      photo: null, shippingPhoto: null, carrier: "", trackingNumber: ""
+    });
+    update(function(s){
+      return Object.assign({}, s, {gifts: [gift].concat(s.gifts)});
+    }, true);
+    toast("Added to " + p.name.split(" ")[0] + "'s wish list 💚");
+    renderPerson();
+  }
+  btn.addEventListener("click", add);
+  input.addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); add(); } });
 }
 function wireGiftRows(container, p){
   Array.prototype.forEach.call(container.querySelectorAll("[data-mark]"), function(b){
