@@ -1994,6 +1994,7 @@ function wireGiftRows(container, p){
   Array.prototype.forEach.call(container.querySelectorAll("[data-arch-gift]"), function(b){
     b.addEventListener("click", function(){
       var g = giftById(b.getAttribute("data-arch-gift"));
+      if (!window.confirm("\u201C" + g.name + "\u201D will move to Archived. It waits there until you restore it \u2014 nothing is deleted.")) return;
       update(function(s){
         return Object.assign({}, s, {gifts: s.gifts.map(function(x){
           return x.id === g.id ? Object.assign({}, x, {archived: true}) : x;
